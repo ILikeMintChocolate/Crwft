@@ -1,0 +1,21 @@
+{
+  "name": "svelte-app",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "sirv dist --no-clear"
+  },
+  "devDependencies": {
+    "@sveltejs/vite-plugin-svelte": "^1.0.0-next.31",
+    "svelte": "^3.44.2",
+    "vite": "^2.7.1"
+  },
+  "dependencies": {
+    "fabric": "^5.2.1",
+    "firebase": "^9.8.2",
+    "jszip": "^3.10.0",
+    "sirv-cli": "^1.0.0"
+  }
+}
