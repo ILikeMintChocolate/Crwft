@@ -11,15 +11,14 @@
     export let componentArray;
     export let mode;
     export let type;
+    export let currentSelect;
 
     const dispatch = createEventDispatcher();
 
 
     
 
-    export function refresh(currentSelect) {
-
-        console.log('refresh')
+    export function refresh(currentSelect2) {
 
         let checkedBoxes = document.querySelectorAll('input[name=checkbox]:checked');
         let allBoxes = document.querySelectorAll('input[name=checkbox]');
@@ -28,7 +27,7 @@
             element.checked = false;
         })
 
-        currentSelect.forEach(element1 => {
+        currentSelect2.forEach(element1 => {
             allBoxes.forEach((element2) => {
                 if (element1 == element2.id) {
                     element2.checked = true;
@@ -55,12 +54,15 @@
 
 
     function checkButton(event) {
+        console.log(tempSelection)
+        console.log(componentArray)
+
         selection = Array(0);
         let data;
         let index;
         let tempList;
 
-        console.log('checkButton')
+        
 
         tempSelection.forEach((element1, index1) => {
             componentArray.forEach((element2, index2) => {
@@ -71,8 +73,8 @@
             });
         });
 
-        console.log(event.target.checked)
-
+        console.log(event.path[0].defaultValue)
+        console.log(index)
 
         if (event.target.checked) {
             dispatch('selectComponent1', {
@@ -96,11 +98,27 @@
     onMount(async () => {
         if (mode == 'hide')
             document.getElementById('main').style.display = 'none';
-        else if (mode == 'show')
+        else if (mode == 'show') {
             document.getElementById('main').style.display = 'block';
+            let checkedBoxes = document.querySelectorAll('input[name=checkbox]:checked');
+            let allBoxes = document.querySelectorAll('input[name=checkbox]');
+            
+            checkedBoxes.forEach((element) => {
+                element.checked = false;
+            })
+
+            currentSelect.forEach(element1 => {
+                allBoxes.forEach((element2) => {
+                    if (element1 == element2.id) {
+                        element2.checked = true;
+                    }
+                })
+            });
+        }
 
     })
 
+    
     
 
     
