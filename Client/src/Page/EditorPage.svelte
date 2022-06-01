@@ -43,6 +43,7 @@
 
     let CustomPropertyChild;
     let CustomSelectComponentChild;
+    let CustomSelectComponentChild2;
 
 
     class ThemeClass {
@@ -1294,9 +1295,10 @@
                     opt.e.preventDefault();
                     opt.e.stopPropagation();
                     ui.currentZoom = roundTwo(pageArray[length].canvas.getZoom());
+                    pageArray[length].canvas.renderAll();
 
-                    pageArray[length].object.title.top = -2000 * 1/roundTwo(pageArray[length].canvas.getZoom());
-                    pageArray[length].object.title.fontSize = 1000 * 1/roundTwo(pageArray[length].canvas.getZoom());
+                    pageArray[length].defaultObject.title.top = -2000 * 1/roundTwo(pageArray[length].canvas.getZoom());
+                    pageArray[length].defaultObject.title.fontSize = 1000 * 1/roundTwo(pageArray[length].canvas.getZoom());
                 }
             });
 
@@ -1370,8 +1372,6 @@
             ui.objectType = 'page';
 
             setCanvasZoom('page', length);
-            CustomSelectComponentChild.refresh(ui.currentSelect);
-
 
             ui.pageOrComponent = 'page';
             ui.pageIndex = length;
@@ -2146,6 +2146,9 @@
 
     function deleteComponentImage(deleteComponentId, componentIndex, list) {
 
+        console.log(deleteComponentId)
+        console.log(componentIndex)
+
         pageArray[ui.pageIndex].selectComponent.forEach(element => {
             if (element.componentIndex == deleteComponentId) {
                 returnObj(deleteComponentId);
@@ -2830,8 +2833,6 @@
             ui.currentSelect[index2] = String(element.componentIndex);
         });
 
-        console.log(ui.currentSelect)
-
         CustomSelectComponentChild.refresh(ui.currentSelect);        
         ui.currentPageMode = 'page';
         ui.objectType = 'page'
@@ -3110,7 +3111,7 @@
         on:setZoomDefault={()=>{
             setZoomDefault();
         }}
-        on:showPreview={()=>{
+        on:showDemoPage={()=>{
             createComponentFile();
             createPageFile();
             createRoutesFile();
@@ -3132,8 +3133,40 @@
             uploadsaveFile();
         }}
 
-        on:exportFile={()=>{
-            console.log(componentArray[0].object[0].object)
+        on:exportFileAsSvelte={()=>{
+            createComponentFile();
+            createPageFile();
+            createRoutesFile();
+            if(preFileContents.length == 0){
+                requestData(1, "downloadSvelte");
+            } else {
+              requestData(checkUpdatedData(), "downloadSvelte");
+              preFileContents = [];
+              preFileNames = [];
+            }
+            preFileContents = fileContents.slice();
+            preFileNames = fileNames.slice();
+            fileContents = [];
+            fileNames = [];
+            filesIndex = 0;
+        }}
+
+        on:exportFileAsBuild={()=>{
+            createComponentFile();
+            createPageFile();
+            createRoutesFile();
+            if(preFileContents.length == 0){
+                requestData(1, "downloadCompiled");
+            } else {
+              requestData(checkUpdatedData(), "downloadCompiled");
+              preFileContents = [];
+              preFileNames = [];
+            }
+            preFileContents = fileContents.slice();
+            preFileNames = fileNames.slice();
+            fileContents = [];
+            fileNames = [];
+            filesIndex = 0;
         }}
 
 
@@ -3208,8 +3241,6 @@
                         ui.currentSelect[index] = String(element.componentIndex);
                     });
 
-                    CustomSelectComponentChild.refresh(ui.currentSelect);
-
                     pageArray.forEach((element) => {
                         element.canvas.defaultCursor = `url("../icon/Cursor1.png"), auto`;
                         element.canvas.hoverCursor = `url("../icon/Cursor1.png"), auto`;
@@ -3218,6 +3249,12 @@
                         element.canvas.defaultCursor = `url("../icon/Cursor1.png"), auto`;
                         element.canvas.hoverCursor = `url("../icon/Cursor1.png"), auto`;
                     });
+
+                    
+                    CustomSelectComponentChild.refresh(ui.currentSelect);
+
+
+
                     
                 }
                 else if (event.detail.pageOrComponent == 'component') {
@@ -3481,37 +3518,21 @@
                 
                 ></CustomProperty>
 
+                <!--
                 {#if ui.currentPageMode == "component"}
 
                 <CustomSelectComponent bind:this={CustomSelectComponentChild} mode={'hide'} type={ui.objectType} componentArray={componentArray} 
-                    on:selectComponent1={(event)=>{
-                        createComponentImage(event.detail.data);
-                    }}
-                    on:deselectComponent1={(event)=>{
-                        deleteComponentImage(event.detail.data, event.detail.componentIndex, event.detail.list)
-                    }}
-                
                 ></CustomSelectComponent>
                 {:else if ui.objectType != 'componentImage'}
                 <CustomSelectComponent bind:this={CustomSelectComponentChild} mode={'hide'} type={ui.objectType} componentArray={componentArray} 
-                    on:selectComponent1={(event)=>{
-                        let length = pageArray[ui.pageIndex].selectComponent.length
-                        console.log(length)
-                        console.log(event.detail.data)
-                        pageArray[ui.pageIndex].selectComponent[length] = event.detail.data
-                        createComponentImage(event.detail.data);
-                    }}
-                    on:deselectComponent1={(event)=>{
-                        deleteComponentImage(event.detail.data, event.detail.componentIndex, event.detail.list)
-                    }}
-                
                 ></CustomSelectComponent>
                 {/if}
+                -->
 
             {:else if ui.currentPageMode == "page" && ui.objectType != 'componentImage'}
                 <CustomSelectComponent bind:this={CustomSelectComponentChild} mode={'show'} type={ui.objectType} componentArray={componentArray}
+                    currentSelect={ui.currentSelect}
                     on:selectComponent1={(event)=>{
-                        
                         let length = pageArray[ui.pageIndex].selectComponent.length
                         pageArray[ui.pageIndex].selectComponent[length] = event.detail.data
                         createComponentImage(event.detail.data);
