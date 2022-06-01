@@ -175,17 +175,20 @@
                         style="width: 55px; color: #383838; text-transform:uppercase;"
                         on:keypress={changeValue1} 
                         on:blur={changeValue2}
+                        onClick="this.select();"
                         >
                         <input type="text" class="input-text input-text-font" bind:value={data2}
                         style="width: 38px; color: #383838; text-transform:uppercase;"
                         on:keypress={changeValue1} 
                         on:blur={changeValue2}
+                        onClick="this.select();"
                         >
                     {:else}
                         <input type="text" class="input-text input-text-font" bind:value={data}
                         style="width: 100px; color: #383838; text-transform:uppercase;"
                         on:keypress={changeValue1} 
                         on:blur={changeValue2}
+                        onClick="this.select();"
                         >
                     {/if}
                 </div>
@@ -300,6 +303,10 @@
 
     #input-text-box:focus-within .input-text-title {
         color: #18A0FB;
+    }
+
+    input::selection {
+        background: #18A0FB30;
     }
 
 </style>

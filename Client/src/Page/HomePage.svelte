@@ -29,7 +29,6 @@
 
     $firebaseApp = initializeApp(firebaseConfig);
     $firebaseDB = getFirestore($firebaseApp);
-    const auth = getAuth();
     
 
     let fileArray = []
@@ -43,13 +42,13 @@
         return user.uid;
     };
 
-    const normalizeData = (tempArray1) => {
-        for (let i = 0; i < tempArray1.length; i++) {
-            let date = new Date(tempArray1[i].changeDate['seconds'] * 1000);
-            tempArray1[i].changeDate = `${date.getFullYear()}/${date.getMonth()+1}/${date.getDate()} ${date.getHours()}:${date.getMinutes()}`;
-        }
-        return tempArray1;
-    }
+    //const normalizeData = (tempArray1) => {
+    //    for (let i = 0; i < tempArray1.length; i++) {
+    //        let date = new Date(tempArray1[i].changeDate['seconds'] * 1000);
+    //        tempArray1[i].changeDate = `${date.getFullYear()}/${date.getMonth()+1}/${date.getDate()} ${date.getHours()}:${date.getMinutes()}`;
+    //    }
+    //    return tempArray1;
+    //}
 
     async function getOrdersByUser() {
         const tempUserUID = getUserUID();
@@ -62,9 +61,9 @@
             }
         });
 
-        let tempArray2 = await normalizeData(tempArray1);
+        //let tempArray2 = await normalizeData(tempArray1);
 
-        return tempArray2;
+        return tempArray1;
     }
 
     onMount(async () => {
@@ -144,10 +143,12 @@
                         <div class="grid-item" on:click={(event) => {
                             let target = event.path[0]
                             fileArray.forEach((element) => {
-                                if (element.projectName == target.childNodes[0].childNodes[2].innerHTML)
+                                if (element.projectName == target.childNodes[0].childNodes[2].innerHTML) {
                                     $loadArray = element
+                                    console.log(element)
+                                }
+                                    
                             });
-                            console.log($loadArray)
                             
                             push(`/editor/${$loadArray.projectName}`)
                         }}>

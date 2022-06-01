@@ -129,6 +129,7 @@
                         style="width: {inputWidth}px; color: #383838;"
                         on:keypress={changeValue1} 
                         on:blur={changeValue2}
+                        onClick="this.select();"
                         >
                 </div>
             {:else if borderStyle == false}
@@ -142,6 +143,7 @@
                         style="width: {inputWidth}px; color: #383838;"
                         on:keypress={changeValue1} 
                         on:blur={changeValue2}
+                        onClick="this.select();"
                         >
                 </div>
             {/if}
@@ -233,6 +235,10 @@
 
     .input-text-title p {
         margin-top: 1px;
+    }
+
+    input::selection {
+        background: #18A0FB30;
     }
 
 

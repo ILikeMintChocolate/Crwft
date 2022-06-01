@@ -1,6 +1,7 @@
 <script>
     
     import { createEventDispatcher} from 'svelte';
+    import { onMount } from 'svelte';
 
 
     let selection = Array(0);
@@ -8,17 +9,34 @@
     let tempCount = 0;
 
     export let componentArray;
-    export let currentSelect;
-
-    console.log(currentSelect)
-
-
-    currentSelect.forEach((element, index) => {
-        tempSelection[index] = element
-    });
-
+    export let mode;
+    export let type;
 
     const dispatch = createEventDispatcher();
+
+
+    
+
+    export function refresh(currentSelect) {
+
+        console.log('refresh')
+
+        let checkedBoxes = document.querySelectorAll('input[name=checkbox]:checked');
+        let allBoxes = document.querySelectorAll('input[name=checkbox]');
+        
+        checkedBoxes.forEach((element) => {
+            element.checked = false;
+        })
+
+        currentSelect.forEach(element1 => {
+            allBoxes.forEach((element2) => {
+                if (element1 == element2.id) {
+                    element2.checked = true;
+                }
+            })
+        });
+        
+    }
 
 
     class SelectComponentClass {
@@ -42,22 +60,19 @@
         let index;
         let tempList;
 
-
-
+        console.log('checkButton')
 
         tempSelection.forEach((element1, index1) => {
             componentArray.forEach((element2, index2) => {
-                if (element2.path == element1)
+                if (element2.index == element1)
                     data = new SelectComponentClass(element2.path, componentArray[index2].componentProperty.imageSrc, index2, 
                     componentArray[index2].defaultObject.box.width, componentArray[index2].defaultObject.box.height)
                     index = index2;
             });
         });
 
-        //tempSelection.forEach((element, i) => {
-        //    tempList[i] = new SelectComponentClass(element, componentArray[index2].componentProperty.imageSrc, index2, 
-        //            componentArray[index2].defaultObject.box.width, componentArray[index2].defaultObject.box.height)
-        //});
+        console.log(event.target.checked)
+
 
         if (event.target.checked) {
             dispatch('selectComponent1', {
@@ -78,25 +93,27 @@
         
     }
 
-    /*
-    export function refreshFunc(data) {
-        tempSelection = null;
-        tempSelection = Array(0);
-        tempSelection = data;
-    }
-    */
+    onMount(async () => {
+        if (mode == 'hide')
+            document.getElementById('main').style.display = 'none';
+        else if (mode == 'show')
+            document.getElementById('main').style.display = 'block';
+
+    })
+
+    
+
+    
 
 
 
 </script>
 
 
-<main>
-    
-    {#each currentSelect as e}
-        {e.path}
-    {/each}
-    
+{#if type != 'componentImage'}
+
+<main id="main">
+
     <div id="title-wrapper" >
         <div class="colomn-center">
             <div id="title" >Add Component</div>
@@ -106,8 +123,8 @@
         <div id="component-list-wrapper">
             {#each componentArray as list}
                 <div>
-                    <input type="checkbox" id={list.path} value={list.path} bind:group={tempSelection} on:change={checkButton}>
-                    <label class="list-label" for={list.path}>
+                    <input name="checkbox" type="checkbox" id={list.index} value={list.index} bind:group={tempSelection} on:change={checkButton}>
+                    <label class="list-label" for={list.index}>
                         {list.path}
                     </label>
                     <!-- svelte-ignore a11y-missing-attribute -->
@@ -117,6 +134,8 @@
         </div>
     </div>
 </main>
+
+{/if}
 
 
 

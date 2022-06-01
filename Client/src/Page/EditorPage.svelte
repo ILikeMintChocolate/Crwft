@@ -4,28 +4,27 @@
 
 
 <script>
-    import { initializeApp } from "firebase/app";
-    import { getFirestore } from "firebase/firestore";
-    import { collection, doc, setDoc, getDoc, getDocs, query, where } from "firebase/firestore";
+    import { doc, setDoc, getDoc } from "firebase/firestore";
     
 
-    const firebaseConfig = {
-        apiKey: "AIzaSyDEZQSqcTsgGP1h39f1KY_jYa9vvlnVcKs",
-        authDomain: "crwft-db1eb.firebaseapp.com",
-        projectId: "crwft-db1eb",
-        storageBucket: "crwft-db1eb.appspot.com",
-        messagingSenderId: "301560353293",
-        appId: "1:301560353293:web:2ce6281a58c7ee3d12fb44"
-    };
-    
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+    //const firebaseConfig = {
+    //    apiKey: "AIzaSyDEZQSqcTsgGP1h39f1KY_jYa9vvlnVcKs",
+    //    authDomain: "crwft-db1eb.firebaseapp.com",
+    //    projectId: "crwft-db1eb",
+    //    storageBucket: "crwft-db1eb.appspot.com",
+    //    messagingSenderId: "301560353293",
+    //    appId: "1:301560353293:web:2ce6281a58c7ee3d12fb44"
+    //};
+    //
+    //const app = initializeApp(firebaseConfig);
+    //const db = getFirestore(app);
 
 
     import CustomTool1 from './component/CustomTool1.svelte'
     import CustomTool2 from './component/CustomTool2.svelte'
     import CustomLayer from './component/CustomLayer.svelte'
     import CustomProperty from './component/CustomProperty.svelte'
+    import CustomSelectComponent from './component/CustomSelectComponent.svelte'
 
     import { windowHeight } from './store.js';
     import { toolSectionHeight } from './store.js';
@@ -33,18 +32,18 @@
 
     import { onMount } from "svelte";
     import { fabric } from "fabric";
-    import JSZip from "jszip"
-import { element } from "svelte/internal";
-
-
-
+    
+    import { userUID } from './store.js';
+    import { loadArray } from './store.js';
+    import { firebaseDB } from './store.js';
+    import { firebaseApp } from './store.js';
 
     let innerWidth = window.innerWidth;
     let innerHeight = window.innerHeight;
 
     let CustomPropertyChild;
+    let CustomSelectComponentChild;
 
-    
 
     class ThemeClass {
         constructor() {
@@ -89,7 +88,7 @@ import { element } from "svelte/internal";
             this.index = index;
             this.path = path;
             this.canvas = canvas;
-            this.zoom = 0.3;
+            this.zoom = 0.6;
             this.canvasId = canvasId;
             this.canvasWrapperId = canvasWrapperId;
             this.object = new Array(0);
@@ -99,7 +98,7 @@ import { element } from "svelte/internal";
                     this.title = null;
                 }
             }
-            this.selectComponent = new Array();
+            this.selectComponent = new Array(0);
         }
     }
 
@@ -117,7 +116,7 @@ import { element } from "svelte/internal";
             this.index = index;
             this.path = path;
             this.canvas = canvas;
-            this.zoom = 0.3;
+            this.zoom = 0.6;
             this.canvasId = canvasId;
             this.canvasWrapperId = canvasWrapperId;
             this.object = new Array(0);
@@ -189,6 +188,25 @@ import { element } from "svelte/internal";
         }
     }
 
+    class ProjectInfo {
+        constructor() {
+            this.projectName = '';
+            this.createDate = null;
+            this.editedData = null;
+        }
+    }
+
+    class SaveFileClass {
+        constructor(componentId, componentImage, componentIndex, width, height, x, y) {
+            this.componentId = componentId;
+            this.componentImage = componentImage;
+            this.componentIndex = componentIndex;
+            this.width = width;
+            this.height = height;
+            this.x = x;
+            this.y = y;
+        }
+    }
 
 
     let ui = new UIClass();
@@ -196,6 +214,7 @@ import { element } from "svelte/internal";
     let currentObject = new CurrentObjectClass();
     let currentComponent = new CurrentComponentClass();
     let pageArray = new Array(0);
+    let projectInfo = new ProjectInfo();
     //pageArray[0] = new PageClass(0,'/Page0',null,'','');
     //pageArray[pageArray.length] = new PageClass(pageArray.length, '/Page' + pageArray.length ,null,'','');
 
@@ -203,7 +222,7 @@ import { element } from "svelte/internal";
     //ui.currentComponentObjectArray[0] = new ObjectClass(null,null,null,null);
     //componentArray[0] = new ComponentClass(0, '/Component0',null,'','');
     //componentArray[componentArray.length] = new ComponentClass(componentArray.length, '/Component' + componentArray.length ,null,'','');
-    
+    let saveFile;
 
     onMount(async () => {
 
@@ -269,8 +288,10 @@ import { element } from "svelte/internal";
 
             pageArray[0].canvas.defaultCursor = `url("../icon/Cursor1.png"), auto`;
             pageArray[0].canvas.hoverCursor = `url("../icon/Cursor1.png"), auto`;
+            
 
             componentArray[0] = new ComponentClass(0, 'Component0', new fabric.Canvas('canvas-component-' + 0, {
+                    objectCaching:false,    
                     imageSmoothingEnabled: false,
                     fireMiddleClick: true,
                 }),
@@ -312,7 +333,6 @@ import { element } from "svelte/internal";
 
             componentArray[0].canvas.defaultCursor = `url("../icon/Cursor1.png"), auto`;
             componentArray[0].canvas.hoverCursor = `url("../icon/Cursor1.png"), auto`;
-
 
             pageArray[0].canvas.on('mouse:down', function(event) {
                 if (event.button == 1) {
@@ -359,7 +379,7 @@ import { element } from "svelte/internal";
             // 키보드 이동 이벤트
             fabric.util.addListener(document.body, 'keydown', function(event) {
                 
-                var key = event.which || event.keyCode;
+                let key = event.which || event.keyCode;
 
                 if(event.shiftKey && key === 37)
                     moveSelected(1, 10);
@@ -411,32 +431,33 @@ import { element } from "svelte/internal";
             }
 
             function deleteObject() {
-                let activeObject = componentArray[0].canvas.getActiveObject();
-                if (activeObject.type == "rect" || activeObject.type == "ellipse") {
-                    componentArray[0].object.forEach(function(element) {
-                        if(element.object.id === activeObject.id) {
-                            componentArray[0].object[element.index].object.id = '//**//';
-                        }
-                    })
-                    componentArray[0].canvas.remove(activeObject);
-                    ui.currentComponentObjectArray = componentArray[0].object;
-                }
-                else if (activeObject.type == "i-text") {
-                    if (!activeObject.isEditing){
+                if (ui.componentIndex == 0) {
+                    let activeObject = componentArray[0].canvas.getActiveObject();
+                    if (activeObject.type == "rect" || activeObject.type == "ellipse") {
                         componentArray[0].object.forEach(function(element) {
                             if(element.object.id === activeObject.id) {
                                 componentArray[0].object[element.index].object.id = '//**//';
                             }
                         })
-
                         componentArray[0].canvas.remove(activeObject);
                         ui.currentComponentObjectArray = componentArray[0].object;
                     }
+                    else if (activeObject.type == "i-text") {
+                        if (!activeObject.isEditing){
+                            componentArray[0].object.forEach(function(element) {
+                                if(element.object.id === activeObject.id) {
+                                    componentArray[0].object[element.index].object.id = '//**//';
+                                }
+                            })
+
+                            componentArray[0].canvas.remove(activeObject);
+                            ui.currentComponentObjectArray = componentArray[0].object;
+                        }
+                    }
                 }
+                
             }
             // 키보드 이동 이벤트
-
-
 
             componentArray[0].canvas.on('mouse:down', function(event) {
                 
@@ -681,6 +702,7 @@ import { element } from "svelte/internal";
                 }
 
             }); 
+            
 
             componentArray[0].canvas.on('mouse:move', function(event){
 
@@ -852,13 +874,11 @@ import { element } from "svelte/internal";
             });
 
 
-
             pageArray[0].canvas.on('object:moving', function(event){
                 if (event.target.id != '////defaultBox///' && event.target.id != '///defaultText///') {
+                    let key = event.which || event.keyCode;
                     let activeObject = pageArray[0].canvas.getActiveObject();
                     ui.objectType = 'componentImage';
-
-
                     currentObject.object = activeObject;
                     currentObject.x = parseInt(currentObject.object.left);
                     currentObject.y = parseInt(currentObject.object.top);
@@ -866,13 +886,9 @@ import { element } from "svelte/internal";
                         top: currentObject.y,
                         left: currentObject.x,
                     });
-
                     let index = returnIndex2(pageArray[0].selectComponent, activeObject.id);
-                    
                     pageArray[0].selectComponent[index].x = currentObject.x;
-                    
                     pageArray[0].selectComponent[index].y = currentObject.y;
-
                 }
             });
 
@@ -896,10 +912,11 @@ import { element } from "svelte/internal";
                     });
 
                     let index = returnIndex(componentArray[0].object, activeObject.id);
-                    
-                    componentArray[0].object[index].object = activeObject;
+                    //componentArray[0].object[index].object = activeObject;
                 }
             });
+
+            
 
 
             componentArray[0].canvas.on('object:scaling', function(event){
@@ -912,8 +929,16 @@ import { element } from "svelte/internal";
                         ui.objectType = 'ellipse';
                     else if (activeObject.type == 'i-text')
                         ui.objectType = 'i-text';
-                    currentObject.width = Math.floor(activeObject.getScaledWidth());
-                    currentObject.height = Math.floor(activeObject.getScaledHeight());
+                    currentObject.width = parseInt(activeObject.getScaledWidth());
+                    currentObject.height = parseInt(activeObject.getScaledHeight());
+                    activeObject.set({
+                        width: currentObject.width,
+                        height: currentObject.height,
+                        scaleX: 1,
+                        scaleY: 1,
+                        left: parseInt(currentObject.x),
+                        top: parseInt(currentObject.y),
+                    })
                     componentArray[0].canvas.renderAll()
                 }
             });
@@ -1024,57 +1049,29 @@ import { element } from "svelte/internal";
                 
         setCanvasZoom(); 
 
-
-        
-
-
-
-
-        /*
         // 세이브파일 있음
         if ($loadArray != null) {
             saveFile = $loadArray;
-            
             projectInfo.createDate = saveFile.createDate;
             projectInfo.projectName = saveFile.projectName;
-            loadSaveFile();
+            
+            loadSaveFile($loadArray);
+            
         }
-        // 세이브파일 없음
+        // 새로만들기
         else { 
-            projectInfo.projectName = 'Project' + (params.id*1+1);
+            try {
+                projectInfo.projectName = 'Project' + (params.id*1+1);
+            } catch (error) {
+                projectInfo.projectName = 'Project1';
+            }
+            
             projectInfo.createDate = new Date();
         }
-        */
-
-        // 이미 page1 component1은 생성됨
 
         
-        //function loadSaveFile() {
-
-            //console.log(testSaveFileArrayJson)
-
-
-            //let asdf = JSON.parse(testSaveFileArrayJson)
-
-
-            //console.log(asdf)
-
-
-
-
-
-
-
-            //componentArray[0].canvas.loadFromJSON(testCanvasJson, function() {
-            //    componentArray[0].canvas.renderAll(); 
-            //})
-
-
-        //}
-
-
-        //loadSaveFile()
         
+
 
     });
 
@@ -1207,6 +1204,7 @@ import { element } from "svelte/internal";
             document.getElementById('canvas-page-' + length + '-wrapper').appendChild(canvas);
             
             pageArray[length] = new PageClass(length, '/Page' + length, new fabric.Canvas('canvas-page-' + length, {
+                    objectCaching:false,
                     imageSmoothingEnabled: false,
                     fireMiddleClick: true,
                 }),
@@ -1225,6 +1223,9 @@ import { element } from "svelte/internal";
                 stroke: "#ffffff",
                 width: 1920,
                 height: 1080,
+                
+                                originX: 'left',
+                                originY: 'top',
             })
             pageArray[length].defaultObject.title = new fabric.Textbox('/Page' + length, {
                 fontFamily: 'Nunito',
@@ -1265,6 +1266,7 @@ import { element } from "svelte/internal";
             });
 
             document.getElementById(pageArray[length].canvasWrapperId).style.display = 'block';
+            
     
             let zoomLeft = (pageArray[length].canvas.width - pageArray[length].defaultObject.box.width * pageArray[length].zoom) / 2;
             let zoomTop = (pageArray[length].canvas.height - pageArray[length].defaultObject.box.height * pageArray[length].zoom) / 2;
@@ -1314,25 +1316,12 @@ import { element } from "svelte/internal";
                     });
 
                     let index = returnIndex2(pageArray[length].selectComponent, activeObject.id);
-                    
-                    //pageArray[0].selectComponent[index].x = currentObject.x;
-                    //
-                    //pageArray[0].selectComponent[index].y = currentObject.y;
-
                     pageArray[length].selectComponent[index].x = currentObject.x;
                     pageArray[length].selectComponent[index].y = currentObject.y;
-
-                    //let index = returnIndex(pageArray[0].object, activeObject.id);
-                    //
-                    //pageArray[0].selectComponent[index].object = activeObject;
                 }
             });
 
             ui.currentZoom = roundTwo(pageArray[length].canvas.getZoom());
-
-            pageArray[length].canvas.defaultCursor = `url("../icon/Cursor1.png"), auto`;
-            pageArray[length].canvas.hoverCursor = `url("../icon/Cursor1.png"), auto`;
-
             ui.pageIndex = length;
 
             pageArray[length].canvas.on('mouse:down', function(event) {
@@ -1374,20 +1363,60 @@ import { element } from "svelte/internal";
                 }
             }); 
 
-            
-        
             ui.currentSelect = null;
             ui.currentSelect = Array(0);
-
-            pageArray[ui.pageIndex].selectComponent.forEach((element, index) => {
-                ui.currentSelect[index] = element.componentId;
-            });
 
             ui.currentPageMode = 'page';
             ui.objectType = 'page';
 
-            //CustomPropertyChild.refresh(ui.currentSelect, 'select')
             setCanvasZoom('page', length);
+            CustomSelectComponentChild.refresh(ui.currentSelect);
+
+
+            ui.pageOrComponent = 'page';
+            ui.pageIndex = length;
+            ui.currentPageMode = 'page';
+
+            pageArray.forEach(element => {
+                document.getElementById(element.canvasWrapperId).style.display = 'none';
+            });
+            componentArray.forEach(element => {
+                document.getElementById(element.canvasWrapperId).style.display = 'none';
+            });
+
+
+            componentArray.forEach((element, index) => {
+                loadImage(element.defaultObject.box.width, element.defaultObject.box.height, index);
+            });
+            
+            
+            ui.currentZoom = roundTwo(pageArray[ui.pageIndex].canvas.getZoom());
+
+            currentObject.id = pageArray[ui.pageIndex].path;
+
+            document.getElementById('canvas-page-' + ui.pageIndex + '-wrapper').style.display = 'block';
+            
+            ui.objectType = 'page';
+
+            
+            ui.currentSelect = null;
+            ui.currentSelect = Array(0); 
+
+            pageArray[ui.pageIndex].selectComponent.forEach((element, index) => {
+                ui.currentSelect[index] = String(element.componentIndex);
+            });
+
+            CustomSelectComponentChild.refresh(ui.currentSelect);
+
+            pageArray.forEach((element) => {
+                element.canvas.defaultCursor = `url("../icon/Cursor1.png"), auto`;
+                element.canvas.hoverCursor = `url("../icon/Cursor1.png"), auto`;
+            });
+            componentArray.forEach((element) => {
+                element.canvas.defaultCursor = `url("../icon/Cursor1.png"), auto`;
+                element.canvas.hoverCursor = `url("../icon/Cursor1.png"), auto`;
+            });
+
         }
 
         else if (type == 'component') {
@@ -1411,6 +1440,7 @@ import { element } from "svelte/internal";
             document.getElementById('canvas-component-' + length + '-wrapper').appendChild(canvas);
             
             componentArray[length] = new ComponentClass(length, 'Component' + length, new fabric.Canvas('canvas-component-' + length, {
+                    objectCaching:false,
                     imageSmoothingEnabled: false,
                     fireMiddleClick: true,
                 }),
@@ -1500,7 +1530,7 @@ import { element } from "svelte/internal";
             // 키보드 이벤트
             fabric.util.addListener(document.body, 'keydown', function(event) {
                 
-                var key = event.which || event.keyCode;
+                let key = event.which || event.keyCode;
 
                 if(event.shiftKey && key === 37)
                     moveSelected(1, 10);
@@ -1551,26 +1581,29 @@ import { element } from "svelte/internal";
 
             }
 
-            function deleteObject() { 
-                if (activeObject.type == "rect" || activeObject.type == "ellipse") {
-                    componentArray[length].object.forEach(function(element) {
-                        if(element.object.id === activeObject.id) {
-                            componentArray[length].object[element.index].object.id = '//**//';
-                        }
-                    })
-                    componentArray[length].canvas.remove(activeObject);
-                    ui.currentComponentObjectArray = componentArray[length].object;
-                }
-                else if (activeObject.type == "i-text") {
-                    if (!activeObject.isEditing){
-                        componentArray[length].object.forEach(function(element) {
+            function deleteObject() {
+                if (ui.componentIndex != 0) {
+                    let activeObject = componentArray[ui.componentIndex].canvas.getActiveObject();
+                    if (activeObject.type == "rect" || activeObject.type == "ellipse") {
+                        componentArray[ui.componentIndex].object.forEach(function(element) {
                             if(element.object.id === activeObject.id) {
-                                componentArray[length].object[element.index].object.id = '//**//';
+                                componentArray[ui.componentIndex].object[element.index].object.id = '//**//';
                             }
                         })
+                        componentArray[ui.componentIndex].canvas.remove(activeObject);
+                        ui.currentComponentObjectArray = componentArray[0].object;
+                    }
+                    else if (activeObject.type == "i-text") {
+                        if (!activeObject.isEditing){
+                            componentArray[ui.componentIndex].object.forEach(function(element) {
+                                if(element.object.id === activeObject.id) {
+                                    componentArray[ui.componentIndex].object[element.index].object.id = '//**//';
+                                }
+                            })
 
-                        componentArray[length].canvas.remove(activeObject);
-                        ui.currentComponentObjectArray = componentArray[length].object;
+                            componentArray[ui.componentIndex].canvas.remove(activeObject);
+                            ui.currentComponentObjectArray = componentArray[ui.componentIndex].object;
+                        }
                     }
                 }
             }
@@ -1759,6 +1792,7 @@ import { element } from "svelte/internal";
                                 editable: true,
                                 hasControls: false,
                                 fontSize: 20,
+                                fill: '#000000',
                                 fontFamily: 'Nunito',
                                 fontWeight: 200,
                             }),
@@ -2015,8 +2049,16 @@ import { element } from "svelte/internal";
                         ui.objectType = 'ellipse';
                     else if (activeObject.type == 'i-text')
                         ui.objectType = 'i-text';
-                    currentObject.width = Math.floor(activeObject.getScaledWidth());
-                    currentObject.height = Math.floor(activeObject.getScaledHeight());
+                    currentObject.width = parseInt(activeObject.getScaledWidth());
+                    currentObject.height = parseInt(activeObject.getScaledHeight());
+                    activeObject.set({
+                        width: currentObject.width,
+                        height: currentObject.height,
+                        scaleX: 1,
+                        scaleY: 1,
+                        left: parseInt(currentObject.x),
+                        top: parseInt(currentObject.y),
+                    })
                     componentArray[length].canvas.renderAll()
                 }
             });
@@ -2051,7 +2093,7 @@ import { element } from "svelte/internal";
         let index;
         array.forEach((element, i) => { 
             
-            if(element.componentId == id)
+            if(element.componentIndex == id)
                 index = i;
         });
         return index;
@@ -2105,7 +2147,7 @@ import { element } from "svelte/internal";
     function deleteComponentImage(deleteComponentId, componentIndex, list) {
 
         pageArray[ui.pageIndex].selectComponent.forEach(element => {
-            if (element.componentId == deleteComponentId) {
+            if (element.componentIndex == deleteComponentId) {
                 returnObj(deleteComponentId);
                 let activeObject = pageArray[ui.pageIndex].canvas.getActiveObject();
                 pageArray[ui.pageIndex].canvas.remove(activeObject);
@@ -2132,17 +2174,22 @@ import { element } from "svelte/internal";
 
     }
 
-    function createComponentImage(data) {
+    function createComponentImage(data, pageI) {
 
-        
+        if (pageI == null)
+            pageI = ui.pageIndex;
 
         var pugImg = new Image();
-        pugImg.onload = function (img) {    
-            
+        pugImg.onload = function (img) {   
+                      
             var img = new fabric.Image(pugImg, {
-                id: data.componentId,
+                id: data.componentIndex,
                 width: data.width,
                 height: data.height,
+                left: data.x,
+                top: data.y,
+                originX: 'left',
+                originY: 'top',
             });
             
             img.setControlsVisibility({
@@ -2156,30 +2203,12 @@ import { element } from "svelte/internal";
                 tl: false,
                 mtr: false,
             });
-            pageArray[ui.pageIndex].canvas.add(img);
+            pageArray[pageI].canvas.add(img);
             
         };
 
-
-
-
-
-
         pugImg.src = data.componentImage;
 
-        ui.currentSelect = null;
-        ui.currentSelect = Array(0);
-
-
-        let i = pageArray[ui.pageIndex].selectComponent.length;
-    
-        pageArray[ui.pageIndex].selectComponent[i] = data;
-                
-        pageArray[ui.pageIndex].selectComponent[i].object = componentArray[data.componentIndex]
-
-        pageArray[ui.pageIndex].selectComponent.forEach((element, index) => {
-            ui.currentSelect[index] = element.componentId;
-        });
 
     }
 
@@ -2350,218 +2379,6 @@ import { element } from "svelte/internal";
 
 
 
-    
-    //코드 생성 부분
-    const zip = new JSZip();
-    var componentFileContents = [];
-    var pageFileContents = [];
-    var addedFileContents = [];
-    function createComponentFile() {
-        var i = 0;
-        componentArray.forEach(comp => {
-            componentFileContents[i] = '';
-            if(comp.path != '//deleted//') {
-                
-                comp.object.forEach(obj => {
-                    if(obj.object.id != '//**//'){
-                        componentFileContents[i] += '<' + 'div ';
-                        componentFileContents[i] += 'id="'+obj.object.id+'">';
-                        if(obj.tagType == 'i-text') componentFileContents[i] += obj.object.text;
-                        componentFileContents[i] += '<' + '/div' + '>\n';
-                    }
-                });
-                componentFileContents[i] += '\n<' + 'style>\n';
-                comp.object.forEach(obj => {
-                    if(obj.object.id != '//**//'){
-                        componentFileContents[i] += "\t#" + obj.object.id + " {\n";
-                        //넓이, 높이, 위치 좌표
-                        componentFileContents[i] += '\t\tposition: absolute;\n';
-                        if(obj.tagType == 'text'){
-                            componentFileContents[i] += '\t\twidth: '+Math.ceil(obj.object.width+10)+'px;\n';
-                        } else {
-                            componentFileContents[i] += '\t\twidth: '+Math.ceil(obj.object.width)+'px;\n';
-                        }
-                        componentFileContents[i] += '\t\theight: '+Math.ceil(obj.object.height)+'px;\n';
-                        
-                        componentFileContents[i] += '\t\tleft: '+Math.ceil(comp.defaultObject.box.width/2 + obj.object.left)+'px;\n';
-
-                        componentFileContents[i] += '\t\ttop: '+Math.ceil(comp.defaultObject.box.height/2 - 20 + obj.object.top)+'px;\n';
-                        //배경색
-                        if(obj.tagType == 'rect'){
-                            componentFileContents[i] += '\t\tbackground-color: '+obj.object.fill+';\n';
-                        }
-                        //테두리
-                        if(obj.object.stroke != null && obj.object.strokeWidth != null){
-                            componentFileContents[i] += '\t\tborder: '+obj.object.strokeWidth+'px solid '+obj.object.stroke.toUpperCase()+';\n';
-                        }
-                        
-                        //폰트
-                        if(obj.tagType == 'i-text'){
-                            componentFileContents[i] += '\t\tfont-size: '+obj.object.fontSize+'px;\n';
-                        }
-                        componentFileContents[i] += '\t}\n';
-                    }
-                });
-                componentFileContents[i] += '<'+'/style>\n';
-                i+=1;
-            }
-        });
-    }
-    function createPageFile() {
-        var i=0;
-        pageArray.forEach(page =>{
-            pageFileContents[i] = '';
-            if(page.path != '//deleted//'){
-                pageFileContents[i] += '<'+'script>\n';
-                page.selectComponent.forEach(sel => {
-                    if(sel.componentId != '//deleted//'){
-                        pageFileContents[i] += "\timport "+sel.componentId+" from './component/"+sel.componentId+".svelte'\n";
-                    }
-                });
-                pageFileContents[i] += '</'+'script>\n';
-                pageFileContents[i] += '<'+'main>\n';
-                page.selectComponent.forEach(sel => {
-                    if(sel.componentId != '//deleted//'){
-                        pageFileContents[i] += '\t<'+'div id="'+sel.componentId+'">\n';
-                        pageFileContents[i] += '\t\t<'+sel.componentId+'></'+sel.componentId+'>\n';
-                        pageFileContents[i] += '\t</'+'div>\n';
-                    }
-                });
-                pageFileContents[i] += '</'+'main>\n';
-                pageFileContents[i] += '<'+'style>\n';
-                page.selectComponent.forEach(sel => {
-                    if(sel.componentId != '//deleted//'){
-                        pageFileContents[i] += "\t#" + sel.componentId + " {\n";
-                        pageFileContents[i] += '\t\tposition: relative;\n';
-                        pageFileContents[i] += '\t\ttop: '+sel.y+'px;\n';
-                        pageFileContents[i] += '\t\tleft: '+sel.x+'px;\n';
-                        pageFileContents[i] += '\t}\n';
-                    }
-                });
-                pageFileContents[i] += '</'+'style>\n';
-                i+=1;
-            }
-        });
-    }
-    function createAddedFile() {
-        var i = 1;
-        //main.js
-        addedFileContents[0] = 'import App from "./App.svelte";\n';
-        addedFileContents[0] += 'var app = new App({target: document.body});\n';
-        addedFileContents[0] += 'export default app;';
-        //App.svelte
-        addedFileContents[1] = '<'+'script>\n';
-        addedFileContents[1] += "\timport Root from './Root.svelte'\n";
-        addedFileContents[1] += '</'+'script>\n';
-        addedFileContents[1] += '<'+'main>\n';
-        addedFileContents[1] += '\t<'+'div id="root">\n';
-        addedFileContents[1] += '\t\t<'+'Root>'+'</'+'Root'+'>\n';
-        addedFileContents[1] += '\t</'+'div>\n';
-        addedFileContents[1] += '</'+'main>\n';
-        //global.css
-        addedFileContents[2] = 'html, body {\n\tposition: relative;\n\twidth: 100%;\n\theight: 100%;\n}\n';
-        addedFileContents[2] += 'body {\n\tcolor: #333;\n\tmargin: 0;\n\tpadding: 8px;\n\tbox-sizing: border-box;\n\t';
-        addedFileContents[2] += 'font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;\n}\n';
-        addedFileContents[2] += 'a {\n\tcolor: rgb(0,100,200);\n\ttext-decoration: none;\n}\n';
-        addedFileContents[2] += 'a:hover {\n\ttext-decoration: underline;\n}\n';
-        addedFileContents[2] += 'a:visited {\n\tcolor: rgb(0,80,160);\n}\n';
-        addedFileContents[2] += 'label {\n\tdisplay: block;\n}\n';
-        addedFileContents[2] += 'input, button, select, textarea {\n\tfont-family: inherit;\n\tfont-size: inherit;\n\t-webkit-padding: 0.4em 0;\n\tpadding: 0.4em;\n\t';
-        addedFileContents[2] += 'margin: 0 0 0.5em 0;\n\tbox-sizing: border-box;\n\tborder: 1px solid #ccc;\n\tborder-radius: 2px;\n}\n';
-        addedFileContents[2] += 'input:disabled {\n\tcolor: #ccc;\n}\n';
-        addedFileContents[2] += 'button {\n\tcolor: #333;\n\tbackground-color: #f4f4f4;\n\toutline: none;\n}\n';
-        addedFileContents[2] += 'button:disabled {\n\tcolor: #999;\n}\n';
-        addedFileContents[2] += 'button:not(:disabled):active {\n\tbackground-color: #ddd;\n}\n';
-        addedFileContents[2] += 'button:focus {\n\tborder-color: #666;\n}\n';
-        //index.html
-        addedFileContents[3] = '<!DOCTYPE html>\n';
-        addedFileContents[3] += '<html lang="en">\n';
-        addedFileContents[3] += '<'+'head>\n';
-        addedFileContents[3] += "\t<meta charset='utf-8'>\n";
-        addedFileContents[3] += "\t<meta name='viewport' content='width=device-width,initial-scale=1'>\n";
-        addedFileContents[3] += "\t<title>Svelte app</title>\n";
-        addedFileContents[3] += "\t<link rel='stylesheet' href='/global.css'>\n";
-        addedFileContents[3] += "\t<link rel='stylesheet' href='/build/bundle.css'>\n";
-        addedFileContents[3] += "\t<"+"script defer src='/build/bundle.js'><"+"/script>\n";
-        addedFileContents[3] += '</head>\n<body>\n</body>\n</html>\n';
-        //.gitignore
-        addedFileContents[4] = '/node_modules/\n/public/build/\n\n.DS_Store\n';
-        //package.json
-        addedFileContents[5] = '{\n  "name": "svelte-app",\n  "version": "1.0.0",\n  "private": true,\n  "scripts": {\n';
-        addedFileContents[5] += '    "build": "rollup -c",\n    "dev": "rollup -c -w",\n    "start": "sirv public --no-clear"    \n  },';
-        addedFileContents[5] += '\n  "devDependencies": {\n    "@rollup/plugin-commonjs": "^17.0.0",\n    "@rollup/plugin-node-resolve": "^11.0.0",';
-        addedFileContents[5] += '\n    "rollup": "^2.3.4",\n    "rollup-plugin-css-only": "^3.1.0",\n    "rollup-plugin-livereload": "^2.0.0",';
-        addedFileContents[5] += '\n    "rollup-plugin-svelte": "^7.0.0",\n    "rollup-plugin-terser": "^7.0.0",\n    "svelte": "^3.0.0"\n  },';
-        addedFileContents[5] += '\n  "dependencies": {\n    "sirv-cli": "^2.0.0"\n  }\n}\n';
-        //rollup.config.js
-        addedFileContents[6] = "import svelte from 'rollup-plugin-svelte';\n";
-        addedFileContents[6] += "import commonjs from '@rollup/plugin-commonjs';\n";
-        addedFileContents[6] += "import resolve from '@rollup/plugin-node-resolve';\n";
-        addedFileContents[6] += "import livereload from 'rollup-plugin-livereload';\n";
-        addedFileContents[6] += "import { terser } from 'rollup-plugin-terser';\n";
-        addedFileContents[6] += "import css from 'rollup-plugin-css-only';\n";
-        addedFileContents[6] += "\nconst production = !process.env.ROLLUP_WATCH;\n\n";
-        addedFileContents[6] += "function serve() {\n"
-        addedFileContents[6] += "\tlet server;\n\tfunction toExit() {\n\t\tif (server) server.kill(0);\n\t}\n";
-        addedFileContents[6] += "\treturn {\n\t\twriteBundle() {\n\t\t\tif (server) return;\n\t\t\t";
-        addedFileContents[6] += "server = require('child_process').spawn('npm', ['run', 'start', '--', '--dev'], {\n\t\t\t\t";
-        addedFileContents[6] += "stdio: ['ignore', 'inherit', 'inherit'],\n\t\t\t\tshell: true\n\t\t\t});\n\t\t\t";
-        addedFileContents[6] += "process.on('SIGTERM', toExit);\n\t\t\tprocess.on('exit', toExit);\n\t\t}\n\t};\n}\n\n";
-        addedFileContents[6] += "export default {\n\tinput: 'src/main.js',\n\toutput: {\n\t\t"
-        addedFileContents[6] += "sourcemap: true,\n\t\tformat: 'iife',\n\t\tname: 'app',\n\t\tfile: 'public/build/bundle.js'\n\t},";
-        addedFileContents[6] += "\n\tplugins: [\n\t\tsvelte({\n\t\t\tcompilerOptions: {\n\t\t\t\tdev: !production\n\t\t\t}\n\t\t}),";
-        addedFileContents[6] += "\n\t\tcss({ output: 'bundle.css' }),\n\t\tresolve({\n\t\t\t";
-        addedFileContents[6] += "browser: true,\n\t\t\tdedupe: ['svelte']\n\t\t}),\n\t\tcommonjs(),";
-        addedFileContents[6] += "\n\t\t!production && serve(),\n\t\t!production && livereload('public'),\n\t\tproduction && terser()";
-        addedFileContents[6] += "\n\t],\n\twatch: {\n\t\tclearScreen: false\n\t}\n};\n";
-    }
-    function makeZip() {
-        var i = 0;
-        var mainJavascriptFile = new Blob([addedFileContents[0]], {type:'text/plain'});
-        zip.folder("src").file("main.js", mainJavascriptFile);
-        var appSvelteFile = new Blob([addedFileContents[1]], {type:'text/plain'});
-        zip.folder("src").file("App.svelte", appSvelteFile);
-        var globalCssFile = new Blob([addedFileContents[2]], {type:'text/plain'});
-        zip.folder("public").file("global.css", globalCssFile);
-        var indexHtmlFile = new Blob([addedFileContents[3]], {type:'text/plain'});
-        zip.folder("public").file("index.html", indexHtmlFile);
-        var gitignoreFile = new Blob([addedFileContents[4]], {type:'text/plain'});
-        zip.file(".gitignore", gitignoreFile);
-        var packageJsonFile = new Blob([addedFileContents[5]], {type:'text/plain'});
-        zip.file("package.json", packageJsonFile);
-        var rollupFile = new Blob([addedFileContents[6]], {type:'text/plain'});
-        zip.file("rollup.config.js", rollupFile);
-        componentArray.forEach(comp => {
-            if(comp.path != "//deleted//") {
-                var componentSvelteFile = new Blob([componentFileContents[i]], {type:'text/plain'});
-                zip.folder("src").folder("component").file(comp.path+".svelte", componentSvelteFile);
-                i+=1;
-            }
-        });
-        i = 0;
-        pageArray.forEach(page => {
-            if(page.path != "//deleted//") {
-                var pageSvelteFile = new Blob([pageFileContents[i]], {type:'text/plain'});
-                if(page.path == '/') {
-                    zip.folder("src").file("Root.svelte", pageSvelteFile);
-                } else {
-                    zip.folder("src").file(page.path.substr(1)+".svelte", pageSvelteFile);
-                }
-                i+=1;
-            }
-        });
-        zip.generateAsync({
-            type: "blob",
-            compression: "DEFLATE"
-        })
-        .then((myZip) => {
-            const url = URL.createObjectURL(myZip);
-            const a =  document.createElement('a');
-            a.download = 'test.zip';
-            a.href = url;
-            a.click();
-        });
-    }
 
     
 
@@ -2576,7 +2393,7 @@ import { element } from "svelte/internal";
 
 
 
-    async function uploadSaveFile() {
+    async function uploadsaveFile() {
         let docData = {
             projectName: "Project1",
             componentArray: [],
@@ -2593,7 +2410,6 @@ import { element } from "svelte/internal";
                         "index": element2.index,
                         "componentIndex": element2.componentIndex,
                         "tagType": element2.tagType,
-                        "css": element2.css,
                         "x": element2.object.left,
                         "y": element2.object.top,
                         "width": element2.object.width,
@@ -2612,7 +2428,6 @@ import { element } from "svelte/internal";
                         "index": element2.index,
                         "componentIndex": element2.componentIndex,
                         "tagType": element2.tagType,
-                        "css": element2.css,
                         "x": element2.object.left,
                         "y": element2.object.top,
                         "id": element2.object.id,
@@ -2671,24 +2486,13 @@ import { element } from "svelte/internal";
             });
         })
 
-         console.log(docData.pageArray)
 
-        await setDoc(doc(db, "qjatjr990105", "Project1"), docData);
+        await setDoc(doc($firebaseDB, $userUID, projectInfo.projectName), docData);
     }
 
 
-    async function loadSaveFile() {
+    async function loadSaveFile(saveFileArray) {
         
-        const docRef = doc(db, "qjatjr990105", "Project1");
-        const docSnap = await getDoc(docRef);
-        let saveFileArray;
-        if (docSnap.exists()) {
-            saveFileArray = docSnap.data();
-        } else {
-            console.log("No such document!");
-        }
-
-
         saveFileArray.componentArray.forEach((element, i)=>{
             if (i == 0) {
                 // 0페이지
@@ -2940,20 +2744,7 @@ import { element } from "svelte/internal";
                 componentArray[i].canvas.moveTo(componentArray[i].defaultObject.box, -1000);
                 componentArray[i].defaultObject.box.moveTo(-1000);
             }
-
-            
-
-         
-
-            
-            
-
-            
-            
         })
-
-
-
 
         saveFileArray.pageArray.forEach((element, i) => {
             if (i == 0) {
@@ -2963,49 +2754,67 @@ import { element } from "svelte/internal";
                 pageArray[0].path = element.path;
                 pageArray[0].zoom = element.zoom;
 
+                
                 if (element.selectComponent.length > 0) {
                     element.selectComponent.forEach((element2, i2) => {
-                        pageArray[0].selectComponent[i2] = class {constructor() {}};
-                        pageArray[0].selectComponent[i2].componentId = element2.componentId;
-                        pageArray[0].selectComponent[i2].componentImage = element2.componentImage;
-                        pageArray[0].selectComponent[i2].componentIndex = element2.componentIndex;
-                        pageArray[0].selectComponent[i2].height = element2.height;
-                        pageArray[0].selectComponent[i2].width = element2.width;
-                        pageArray[0].selectComponent[i2].x = element2.x;
-                        pageArray[0].selectComponent[i2].y = element2.y;
+                        pageArray[0].selectComponent[i2] = new SaveFileClass(element2.componentId, element2.componentImage, element2.componentIndex,
+                            element2.width, element2.height, element2.x, element2.y
+                        );
                     });
                 }
 
-                
+                ui.currentSelect = null;
+                ui.currentSelect = Array(0);
+
+                pageArray[0].selectComponent.forEach((element, index2) => {
+                    if (element.componentId != '///defaultBox///') {
+                        ui.currentSelect[index2] = String(element.componentIndex);
+                        createComponentImage(element, 0)
+                    }
+                });
             }
 
             else {
                 addPage('page', i)
-                pageArray[0].componentId = element.componentId;
-                pageArray[0].componentImage = element.componentImage;
-                pageArray[0].componentIndex = element.componentIndex;
-                pageArray[0].canvasId = element.canvasId;
-                pageArray[0].height = element.height;
-                pageArray[0].width = element.widht;
-                pageArray[0].x = element.x;
-                pageArray[0].y = element.y;
+                pageArray[i].canvasId = element.canvasId;
+                pageArray[i].canvasWrapperId = element.canvasWrapperId;
+                pageArray[i].index = element.index;
+                pageArray[i].path = element.path;
+                pageArray[i].zoom = element.zoom;
+
+                if (element.selectComponent.length > 0) {
+                    element.selectComponent.forEach((element2, i2) => {
+                        pageArray[i].selectComponent[i2] = class {};
+                        pageArray[i].selectComponent[i2].componentId = element2.componentId;
+                        pageArray[i].selectComponent[i2].componentImage = element2.componentImage;
+                        pageArray[i].selectComponent[i2].componentIndex = element2.componentIndex;
+                        pageArray[i].selectComponent[i2].height = element2.height;
+                        pageArray[i].selectComponent[i2].width = element2.width;
+                        pageArray[i].selectComponent[i2].x = element2.x;
+                        pageArray[i].selectComponent[i2].y = element2.y;
+                    });
+                }
+
+                ui.currentSelect = null;
+                ui.currentSelect = Array(0);
+
+                pageArray[i].selectComponent.forEach((element, index2) => {
+                    if (element.componentId != '///defaultBox///') {
+                        ui.currentSelect[index2] = String(element.componentIndex);
+                        createComponentImage(element, i)
+                    }
+                });
             }
         })
 
-        ui.currentSelect = null;
-        ui.currentSelect = Array(0);
-
-        console.log(ui.currentSelect[0].component)
-        pageArray[0].selectComponent.forEach((element, index2) => {
-            console.log(index2)
-            console.log(element.componentId)
-            ui.currentselect[0] = element.componentId;
-        });
+        
 
 
 
 
 
+
+        
 
 
         pageArray.forEach(element => {
@@ -3017,7 +2826,266 @@ import { element } from "svelte/internal";
 
         document.getElementById('canvas-page-0-wrapper').style.display = 'block';
 
+        pageArray[0].selectComponent.forEach((element, index2) => {
+            ui.currentSelect[index2] = String(element.componentIndex);
+        });
+
+        console.log(ui.currentSelect)
+
+        CustomSelectComponentChild.refresh(ui.currentSelect);        
+        ui.currentPageMode = 'page';
+        ui.objectType = 'page'
     }
+    
+
+
+
+
+
+
+
+
+
+
+
+    
+    //코드 생성 부분
+    var filesIndex = 0;
+    var fileNames = [];
+    var fileContents = [];
+    var preFileNames = [];
+    var preFileContents = [];
+    
+    function createComponentFile() {
+        componentArray.forEach(comp => {
+            fileContents[filesIndex] = '';
+            if(comp.path != '//deleted//') {
+                fileContents[filesIndex] += '<'+'script>\n';
+                fileContents[filesIndex] += '\timport { push } from "svelte-spa-router";\n'
+                fileContents[filesIndex] += '<'+'/script>\n';
+                fileContents[filesIndex] += '<'+'main>\n';
+                comp.object.forEach(obj => {
+                    if(obj.object.id != '//**//'){
+                        fileContents[filesIndex] += '\t<' + 'div ';
+                        fileContents[filesIndex] += 'id="'+obj.object.id+'"';
+                        if(obj.Event.when != null){
+                            if(obj.Event.when == "Click"){
+                                if(obj.Event.do == "Move Page"){
+                                    fileContents[filesIndex] += ' on:click={() => { push("'+obj.Event.detail+'") }}';
+                                } else {
+                                    fileContents[filesIndex] += ' on:click={() => { alert("'+obj.Event.detail+'") }}';
+                                }
+                            } else {
+                                if(obj.Event.do == "Move Page"){
+                                    fileContents[filesIndex] += ' on:mouseenter={() => { push("'+obj.Event.detail+'") }}';
+                                } else {
+                                    fileContents[filesIndex] += ' on:mouseenter={() => { alert("'+obj.Event.detail+'") }}';
+                                }
+                            }
+                        }
+                        fileContents[filesIndex] += '>';
+                        if(obj.tagType == 'i-text') {
+                            fileContents[filesIndex] += obj.object.text.replace(",", "/ST47B2F5");
+                        }
+                        fileContents[filesIndex] += '<' + '/div' + '>\n';
+                    }
+                });
+                fileContents[filesIndex] += '<'+'/main>\n';
+                
+                fileContents[filesIndex] += '\n<' + 'style>\n';
+                comp.object.forEach(obj => {
+                    if(obj.object.id != '//**//'){
+                        fileContents[filesIndex] += "\t#" + obj.object.id + " {\n";
+                        //넓이, 높이, 위치 좌표
+                        fileContents[filesIndex] += '\t\tposition: absolute;\n';
+                        if(obj.tagType == 'i-text'){
+                            fileContents[filesIndex] += '\t\twidth: '+Math.ceil(obj.object.width+10)+'px;\n';
+                        } else {
+                            fileContents[filesIndex] += '\t\twidth: '+Math.ceil(obj.object.width)+'px;\n';
+                        }
+                        fileContents[filesIndex] += '\t\theight: '+Math.ceil(obj.object.height)+'px;\n';
+                        
+                        console.log(obj.object.left);
+                        fileContents[filesIndex] += '\t\tleft: '+Math.ceil(comp.defaultObject.box.width/2 + obj.object.left)+'px;\n';
+                        fileContents[filesIndex] += '\t\ttop: '+Math.ceil(comp.defaultObject.box.height/2 - 20 + obj.object.top)+'px;\n';
+                        //배경색
+                        if(obj.tagType == 'i-text'){
+                            fileContents[filesIndex] += '\t\tcolor: '+obj.object.fill+';\n';
+                        } else {
+                            fileContents[filesIndex] += '\t\tbackground-color: '+obj.object.fill+';\n';
+                        }
+                        //테두리
+                        if(obj.object.stroke != null && obj.object.strokeWidth != null){
+                            fileContents[filesIndex] += '\t\tborder: '+obj.object.strokeWidth+'px solid '+obj.object.stroke.toUpperCase()+';\n';
+                        }
+                        
+                        //폰트
+                        if(obj.tagType == 'i-text'){
+                            fileContents[filesIndex] += '\t\tfont-size: '+obj.object.fontSize+'px;\n';
+                        } else if(obj.tagType == 'ellipse'){
+                            fileContents[filesIndex] += '\t\tborder-radius: 50%;\n';
+                        }
+                        fileContents[filesIndex] += '\t}\n';
+                    }
+                });
+                //css 완성되면 넣기
+                //fileContents[filesIndex] += comp.css;
+                fileContents[filesIndex] += '\n<'+'/style>\n';
+                fileNames[filesIndex] = "component/"+ comp.path + ".svelte";
+                filesIndex+=1;
+            }
+        });
+    }
+    function createPageFile() {
+        pageArray.forEach(page =>{
+            fileContents[filesIndex] = '';
+            if(page.path != '//deleted//'){
+                fileContents[filesIndex] += '<'+'script>\n';
+                page.selectComponent.forEach(sel => {
+                    if(sel.componentId != '//deleted//'){
+                        fileContents[filesIndex] += "\timport "+sel.componentId+" from './component/"+sel.componentId+".svelte'\n";
+                    }
+                });
+                fileContents[filesIndex] += '</'+'script>\n';
+                fileContents[filesIndex] += '<'+'main>\n';
+                page.selectComponent.forEach(sel => {
+                    if(sel.componentId != '//deleted//'){
+                        fileContents[filesIndex] += '\t<'+'div id="'+sel.componentId+'">\n';
+                        fileContents[filesIndex] += '\t\t<'+sel.componentId+'></'+sel.componentId+'>\n';
+                        fileContents[filesIndex] += '\t</'+'div>\n';
+                    }
+                });
+                fileContents[filesIndex] += '</'+'main>\n';
+                fileContents[filesIndex] += '<'+'style>\n';
+                page.selectComponent.forEach(sel => {
+                    if(sel.componentId != '//deleted//'){
+                        fileContents[filesIndex] += "\t#" + sel.componentId + " {\n";
+                        fileContents[filesIndex] += '\t\tposition: relative;\n';
+                        fileContents[filesIndex] += '\t\twidth: '+sel.width+'px;\n';
+                        fileContents[filesIndex] += '\t\theight: '+sel.height+'px;\n';
+                        fileContents[filesIndex] += '\t\ttop: '+sel.y+'px;\n';
+                        fileContents[filesIndex] += '\t\tleft: '+sel.x+'px;\n';
+                        fileContents[filesIndex] += '\t}\n';
+                    }
+                });
+                fileContents[filesIndex] += '</'+'style>\n';
+                if(page.path == '/') {
+                    fileNames[filesIndex] = "Root.svelte";
+                } else {
+                    fileNames[filesIndex] = page.path.substr(1) + ".svelte";
+                }
+                filesIndex+=1;
+            }
+        });
+    }
+    function createRoutesFile() {
+        //routes.js
+        fileContents[filesIndex] = "";
+        pageArray.forEach(page => {
+            if(page.path != "//deleted//") {
+                if(page.path == '/'){
+                    fileContents[filesIndex] += "import Root from './Root.svelte'\n";
+                } else {
+                    fileContents[filesIndex] += "import "+page.path.substr(1)+" from './"+page.path.substr(1)+".svelte'\n";
+                }
+            }
+        });
+        
+        fileContents[filesIndex] += "\nconst routes = {\n";
+        pageArray.forEach(page => {
+            if(page.path != "//deleted//") {
+                if(page.path == '/'){
+                    fileContents[filesIndex] += "\t'/': Root/ST47B2F5\n";
+                } else {
+                    fileContents[filesIndex] += "\t'"+page.path+"': "+page.path.substr(1)+"/ST47B2F5\n";
+                }
+            }
+        }); 
+        fileContents[filesIndex] += "}\n\nexport default routes";
+        fileNames[filesIndex] = "routes.js";
+        filesIndex += 1;
+    }
+    function checkUpdatedData() {
+        if(fileNames.length != preFileNames.length) return 1;
+        if(fileContents.length != preFileContents.length) return 1;
+        for(var i=0;i<fileNames.length;i++){
+            if(fileNames[i]!=preFileNames[i]) return 1;
+        }
+        for(var i=0;i<fileContents.length;i++){
+            if(fileContents[i]!=preFileContents[i]) return 1;
+        }
+        return 0;
+    }
+    function requestData(isUpdated, todo) {
+        // todo : 'downloadSvelte', 'downloadCompiled', 'showDemoPage'
+        var userName = 'aneunne7';
+        var projectName = 'defaultProject';
+        if(isUpdated == 0){
+            const form1 = document.createElement('form');
+            form1.method = "post";
+            form1.action = "http://118.67.133.164:8080/" + todo;
+            document.body.appendChild(form1);
+            const formField0 = document.createElement('input');
+            formField0.type = 'hidden';
+            formField0.name = 'userName';
+            formField0.value = userName;
+            form1.appendChild(formField0);
+            const formField1 = document.createElement('input');
+            formField1.type = 'hidden';
+            formField1.name = 'projectName';
+            formField1.value = projectName;
+            form1.appendChild(formField1);
+            if(todo == 'showDemoPage'){
+                var newWin = window.open("about:blank", "Hosting");
+                form1.target = "Hosting";
+            }
+            form1.submit();
+        } else {
+            const form2 = document.createElement('form');
+            form2.method = "post";
+            form2.action = "http://118.67.133.164:8080/compile";
+            document.body.appendChild(form2);
+            const formField0 = document.createElement('input');
+            formField0.type = 'hidden';
+            formField0.name = 'userName';
+            formField0.value = userName;
+            form2.appendChild(formField0);
+            const formField1 = document.createElement('input');
+            formField1.type = 'hidden';
+            formField1.name = 'projectName';
+            formField1.value = projectName;
+            form2.appendChild(formField1);
+            const formField2 = document.createElement('input');
+            formField2.type = 'hidden';
+            formField2.name = 'count';
+            formField2.value = filesIndex;
+            form2.appendChild(formField2);
+            const formField3 = document.createElement('input');
+            formField3.type = 'hidden';
+            formField3.name = 'fileName';
+            formField3.value = fileNames;
+            form2.appendChild(formField3);
+            const formField4 = document.createElement('input');
+            formField4.type = 'hidden';
+            formField4.name = 'contents';
+            formField4.value = fileContents;
+            form2.appendChild(formField4);
+            const formField5 = document.createElement('input');
+            formField5.type = 'hidden';
+            formField5.name = 'todo';
+            formField5.value = todo;
+            form2.appendChild(formField5);
+            if(todo == 'showDemoPage'){
+                var newWin = window.open("about:blank", "Hosting");
+                form2.target = "Hosting";
+            }
+            form2.submit();
+        }
+    }
+
+
+
+
 
     
 
@@ -3038,29 +3106,36 @@ import { element } from "svelte/internal";
         
            
 
-        <CustomTool2 zoom={ui.currentZoom} 
+        <CustomTool2 zoom={ui.currentZoom} currentPageMode={ui.currentPageMode}
         on:setZoomDefault={()=>{
             setZoomDefault();
         }}
         on:showPreview={()=>{
             createComponentFile();
             createPageFile();
-            createAddedFile();
-            makeZip();
-            
+            createRoutesFile();
+            if(preFileContents.length == 0){
+                requestData(1, "showDemoPage");
+            } else {
+              requestData(checkUpdatedData(), "showDemoPage");
+              preFileContents = [];
+              preFileNames = [];
+            }
+            preFileContents = fileContents.slice();
+            preFileNames = fileNames.slice();
+            fileContents = [];
+            fileNames = [];
+            filesIndex = 0;
         }}
 
-        on:upload={()=>{
-            uploadSaveFile();
+        on:saveFile={()=>{
+            uploadsaveFile();
         }}
 
-        on:load={()=>{
-            loadSaveFile();
+        on:exportFile={()=>{
+            console.log(componentArray[0].object[0].object)
         }}
 
-        on:consoleSomething={()=>{
-            console.log(pageArray[0])
-        }}
 
         
         ></CustomTool2>
@@ -3104,7 +3179,6 @@ import { element } from "svelte/internal";
                     ui.pageIndex = event.detail.pageIndex;
                     ui.currentPageMode = 'page';
 
-
                     pageArray.forEach(element => {
                         document.getElementById(element.canvasWrapperId).style.display = 'none';
                     });
@@ -3131,21 +3205,28 @@ import { element } from "svelte/internal";
                     ui.currentSelect = Array(0); 
 
                     pageArray[ui.pageIndex].selectComponent.forEach((element, index) => {
-                        ui.currentSelect[index] = element.componentId;
+                        ui.currentSelect[index] = String(element.componentIndex);
                     });
 
-                    //CustomPropertyChild.refresh(ui.currentSelect, 'select')
+                    CustomSelectComponentChild.refresh(ui.currentSelect);
 
+                    pageArray.forEach((element) => {
+                        element.canvas.defaultCursor = `url("../icon/Cursor1.png"), auto`;
+                        element.canvas.hoverCursor = `url("../icon/Cursor1.png"), auto`;
+                    });
+                    componentArray.forEach((element) => {
+                        element.canvas.defaultCursor = `url("../icon/Cursor1.png"), auto`;
+                        element.canvas.hoverCursor = `url("../icon/Cursor1.png"), auto`;
+                    });
+                    
                 }
                 else if (event.detail.pageOrComponent == 'component') {
 
                     ui.pageOrComponent = event.detail.pageOrComponent;
                     ui.componentIndex = event.detail.componentIndex;
-
-                    
-                    ui.mouseType = event.detail.mouseType;
                     ui.currentPageMode = 'component';
-
+                    ui.mouseType = event.detail.mouseType;
+                    
                     componentArray.forEach(element => {
                         try {
                             element.canvas.discardActiveObject();
@@ -3216,7 +3297,6 @@ import { element } from "svelte/internal";
                 }
             }}
             on:clickActiveObject={(event)=>{
-                console.log('assssssssssss')
                 
                 componentArray[ui.componentIndex].canvas.getObjects().forEach(function(element) {
                     
@@ -3263,149 +3343,192 @@ import { element } from "svelte/internal";
         <!-- 캔버스 -->
 
         <!-- 속성 -->
+        
+
+
         <div id="property-section-box">
-            <CustomProperty bind:this={CustomPropertyChild} type={ui.objectType} currentObject={currentObject} currentComponent={currentComponent}
-            {componentArray}  currentSelect={ui.currentSelect} currentPageMode={ui.currentPageMode} propertyOrEvent={ui.propertyOrEvent}
-            {pageArray}
-            on:eventWhen={(event)=>{
-                currentObject.Event.when = event.detail.data;
-                componentArray[ui.componentIndex].object.forEach(element => {
-                    
-                    if (element.object.id == currentObject.id) {
-                        element.Event.when = event.detail.data;
+            {#if ui.currentPageMode == "component" || ui.objectType == 'componentImage'}
+                <CustomProperty bind:this={CustomPropertyChild} type={ui.objectType} currentObject={currentObject} currentComponent={currentComponent}
+                {componentArray}  currentSelect={ui.currentSelect} currentPageMode={ui.currentPageMode} propertyOrEvent={ui.propertyOrEvent}
+                {pageArray}
+                on:eventWhen={(event)=>{
+                    currentObject.Event.when = event.detail.data;
+                    componentArray[ui.componentIndex].object.forEach(element => {
+                        
+                        if (element.object.id == currentObject.id) {
+                            element.Event.when = event.detail.data;
+                        }
+                    });
+                }}
+
+                on:eventDo={(event)=>{
+                    currentObject.Event.do = event.detail.data;
+                    componentArray[ui.componentIndex].object.forEach(element => {
+                        
+                        if (element.object.id == currentObject.id) {
+                            element.Event.do = event.detail.data;
+                        }
+                    });
+                }}
+
+                on:eventDetail={(event)=>{
+                    currentObject.Event.detail = event.detail.data;
+                    componentArray[ui.componentIndex].object.forEach(element => {
+                        
+                        if (element.object.id == currentObject.id) {
+                            element.Event.detail = event.detail.data;
+                        }
+                    });
+                }}
+
+                on:eventReset={()=>{
+                    currentObject.Event.when = null;
+                    currentObject.Event.do = null;
+                    currentObject.Event.detail = null;
+                    componentArray[ui.componentIndex].object.forEach(element => {
+                        
+                        if (element.object.id == currentObject.id) {
+                            element.Event.when = null;
+                            element.Event.do = null;
+                            element.Event.detail = null;
+                        }
+                    });
+                }}
+
+
+                on:editComponentImageProperty={(event)=>{
+                    let activeObject = pageArray[ui.pageIndex].canvas.getActiveObject();
+                    if (event.detail.x != undefined && event.detail.y != undefined) {
+                        currentObject.x = event.detail.x;
+                        currentObject.x = event.detail.x;
+                        activeObject.set('left', currentObject.x)
+                        activeObject.set('top', currentObject.y)
+                        pageArray[ui.pageIndex].canvas.renderAll()
                     }
-                });
-            }}
+                }}
 
-            on:eventDo={(event)=>{
-                currentObject.Event.do = event.detail.data;
-                componentArray[ui.componentIndex].object.forEach(element => {
-                    
-                    if (element.object.id == currentObject.id) {
-                        element.Event.do = event.detail.data;
-                    }
-                });
-            }}
+                on:alignObject={(event)=>{
+                    alignObject(event.detail.type)
+                }}
 
-            on:eventDetail={(event)=>{
-                currentObject.Event.detail = event.detail.data;
-                componentArray[ui.componentIndex].object.forEach(element => {
-                    
-                    if (element.object.id == currentObject.id) {
-                        element.Event.detail = event.detail.data;
-                    }
-                });
-            }}
+                on:alignComponentImage={(event)=>{
+                    alignComponentImage(event.detail.type)
+                }}
 
-            on:eventReset={()=>{
-                currentObject.Event.when = null;
-                currentObject.Event.do = null;
-                currentObject.Event.detail = null;
-                componentArray[ui.componentIndex].object.forEach(element => {
-                    
-                    if (element.object.id == currentObject.id) {
-                        element.Event.when = null;
-                        element.Event.do = null;
-                        element.Event.detail = null;
-                    }
-                });
-            }}
-
-            on:selectComponent2={(event)=>{
-                createComponentImage(event.detail.data);
-            }}
-
-            on:deselectComponent2={(event)=>{
                 
-                deleteComponentImage(event.detail.data, event.detail.componentIndex, event.detail.list)
-            }}
 
-            on:editComponentImageProperty={(event)=>{
-                let activeObject = pageArray[ui.pageIndex].canvas.getActiveObject();
-                if (event.detail.x != undefined && event.detail.y != undefined) {
-                    currentObject.x = event.detail.x;
-                    currentObject.x = event.detail.x;
-                    activeObject.set('left', currentObject.x)
-                    activeObject.set('top', currentObject.y)
-                    pageArray[ui.pageIndex].canvas.renderAll()
-                }
-            }}
+                on:editObjectProperty={(event)=>{
 
-            on:alignObject={(event)=>{
-                alignObject(event.detail.type)
-            }}
+                    let activeObject = componentArray[ui.componentIndex].canvas.getActiveObject();
+                    
+                    if (event.detail.id != undefined) {
+                        currentObject.id = event.detail.id;
+                        currentObject.activeObject.set('id', currentObject.id)
+                    }
+                    if (event.detail.x != undefined && event.detail.y != undefined) {
+                        currentObject.x = event.detail.x;
+                        currentObject.y = event.detail.y;
+                        activeObject.set('left', currentObject.x)
+                        activeObject.set('top', currentObject.y)
+                    }
+                    if (event.detail.width != undefined && event.detail.height != undefined) {
+                        currentObject.width = event.detail.width;
+                        currentObject.height = event.detail.height;
+                        activeObject.set('width', currentObject.width)
+                        activeObject.set('height', currentObject.height)
+                    }
+                    if (event.detail.color != undefined) {
+                        currentObject.color = event.detail.color;
+                        activeObject.set('fill', '#' + currentObject.color)
+                    }
+                    if (event.detail.stroke != undefined && event.detail.strokeWidth != undefined) {
+                        currentObject.stroke = event.detail.stroke;
+                        currentObject.strokeWidth = event.detail.strokeWidth;
+                        activeObject.set('stroke', '#' +  currentObject.stroke)
+                        activeObject.set('strokeWidth', currentObject.strokeWidth)
+                    }
+                    if (event.detail.fontSize != undefined) {
+                        currentObject.fontSize = event.detail.fontSize;
+                        activeObject.set('fontSize', currentObject.fontSize)
+                    }
 
-            on:alignComponentImage={(event)=>{
-                alignComponentImage(event.detail.type)
-            }}
+                    
+
+                    componentArray[ui.componentIndex].canvas.renderAll()
+                    ui.currentComponentObjectArray = componentArray[ui.componentIndex].object;
+                    
+                }}
+
+                on:editComponentProperty={(event)=>{
+                    if (event.detail.width != undefined) {
+                        currentComponent.width = event.detail.width*1;
+                        componentArray[ui.componentIndex].defaultObject.box.set('width', currentComponent.width)
+                    }
+
+                    if (event.detail.height != undefined) {
+                        currentComponent.height = event.detail.height*1;
+                        componentArray[ui.componentIndex].defaultObject.box.set('height', currentComponent.height)
+                    }
+
+                    if (event.detail.css != undefined) {
+                        currentComponent.css = event.detail.css;
+                        componentArray[ui.componentIndex].css = currentComponent.css;
+                    }
+
+                    componentArray[ui.componentIndex].canvas.renderAll()
+                    
+                }}
+                
+                ></CustomProperty>
+
+                {#if ui.currentPageMode == "component"}
+
+                <CustomSelectComponent bind:this={CustomSelectComponentChild} mode={'hide'} type={ui.objectType} componentArray={componentArray} 
+                    on:selectComponent1={(event)=>{
+                        createComponentImage(event.detail.data);
+                    }}
+                    on:deselectComponent1={(event)=>{
+                        deleteComponentImage(event.detail.data, event.detail.componentIndex, event.detail.list)
+                    }}
+                
+                ></CustomSelectComponent>
+                {:else if ui.objectType != 'componentImage'}
+                <CustomSelectComponent bind:this={CustomSelectComponentChild} mode={'hide'} type={ui.objectType} componentArray={componentArray} 
+                    on:selectComponent1={(event)=>{
+                        let length = pageArray[ui.pageIndex].selectComponent.length
+                        console.log(length)
+                        console.log(event.detail.data)
+                        pageArray[ui.pageIndex].selectComponent[length] = event.detail.data
+                        createComponentImage(event.detail.data);
+                    }}
+                    on:deselectComponent1={(event)=>{
+                        deleteComponentImage(event.detail.data, event.detail.componentIndex, event.detail.list)
+                    }}
+                
+                ></CustomSelectComponent>
+                {/if}
+
+            {:else if ui.currentPageMode == "page" && ui.objectType != 'componentImage'}
+                <CustomSelectComponent bind:this={CustomSelectComponentChild} mode={'show'} type={ui.objectType} componentArray={componentArray}
+                    on:selectComponent1={(event)=>{
+                        
+                        let length = pageArray[ui.pageIndex].selectComponent.length
+                        pageArray[ui.pageIndex].selectComponent[length] = event.detail.data
+                        createComponentImage(event.detail.data);
+                    }}
+                    on:deselectComponent1={(event)=>{
+                        deleteComponentImage(event.detail.data, event.detail.componentIndex, event.detail.list)
+                    }}
+                
+                ></CustomSelectComponent>
+
+            {/if}
 
             
-
-            on:editObjectProperty={(event)=>{
-
-                let activeObject = componentArray[ui.componentIndex].canvas.getActiveObject();
-                
-                if (event.detail.id != undefined) {
-                    currentObject.id = event.detail.id;
-                    currentObject.activeObject.set('id', currentObject.id)
-                }
-                if (event.detail.x != undefined && event.detail.y != undefined) {
-                    currentObject.x = event.detail.x;
-                    currentObject.y = event.detail.y;
-                    activeObject.set('left', currentObject.x)
-                    activeObject.set('top', currentObject.y)
-                }
-                if (event.detail.width != undefined && event.detail.height != undefined) {
-                    currentObject.width = event.detail.width;
-                    currentObject.height = event.detail.height;
-                    activeObject.set('width', currentObject.width)
-                    activeObject.set('height', currentObject.height)
-                }
-                if (event.detail.color != undefined) {
-                    currentObject.color = event.detail.color;
-                    activeObject.set('fill', '#' + currentObject.color)
-                }
-                if (event.detail.stroke != undefined && event.detail.strokeWidth != undefined) {
-                    currentObject.stroke = event.detail.stroke;
-                    currentObject.strokeWidth = event.detail.strokeWidth;
-                    activeObject.set('stroke', '#' +  currentObject.stroke)
-                    activeObject.set('strokeWidth', currentObject.strokeWidth)
-                }
-                if (event.detail.fontSize != undefined) {
-                    currentObject.fontSize = event.detail.fontSize;
-                    activeObject.set('fontSize', currentObject.fontSize)
-                }
-
-                
-
-                componentArray[ui.componentIndex].canvas.renderAll()
-                ui.currentComponentObjectArray = componentArray[ui.componentIndex].object;
-                
-            }}
-
-            on:editComponentProperty={(event)=>{
-                if (event.detail.width != undefined) {
-                    currentComponent.width = event.detail.width*1;
-                    componentArray[ui.componentIndex].defaultObject.box.set('width', currentComponent.width)
-                }
-
-                if (event.detail.height != undefined) {
-                    currentComponent.height = event.detail.height*1;
-                    componentArray[ui.componentIndex].defaultObject.box.set('height', currentComponent.height)
-                }
-
-                if (event.detail.css != undefined) {
-                    currentComponent.css = event.detail.css;
-                    componentArray[ui.componentIndex].css = currentComponent.css;
-                }
-
-                componentArray[ui.componentIndex].canvas.renderAll()
-                
-            }}
             
-            ></CustomProperty>
         </div>
         <!-- 속성 -->
+
     </div>
     
     
@@ -3439,4 +3562,3 @@ import { element } from "svelte/internal";
 
 
 </style>
-

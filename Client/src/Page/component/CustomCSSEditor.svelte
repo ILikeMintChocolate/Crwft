@@ -5,47 +5,27 @@
     export let title;
     export let data;
 
-    
-    let wrapper;
-    let inputTextBox;
-    let colorPreview;
-    
-	
 	const dispatch = createEventDispatcher();
 
-
-	function changeValue1(event) {
+    function changeValue(event) {
         dispatch('message', {
             data: data,
         });
 	}
-
-    function changeValue2() {
-        dispatch('message', {
-            data: data,
-        });
-	}
-
-
-//on:keypress={changeValue1} 
-
-
-    
 
 </script>
 
 
 <main>
 
-    <div id="wrapper" bind:this="{wrapper}" style="width: 150px; height: 200px;" >
-        <div id="input-text-box" bind:this="{inputTextBox}" style="width: 150px; height: 200px">
+    <div id="wrapper" style="width: 150px; height: 200px;" >
+        <div id="input-text-box" style="width: 150px; height: 200px">
             <div class="input-text-title input-text-font">
                 <p>{title}</p>
             </div>
             <div id="row">
                 <textarea id="textarea" type="text" class="input-text input-text-font" bind:value={data}
-                
-                on:blur={changeValue2}
+                on:blur={changeValue}
                 placeholder="You can write css!"
                 ></textarea>
             </div>

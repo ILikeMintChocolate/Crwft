@@ -7,7 +7,6 @@
     import { windowHeight } from '../store.js';
     import { toolSectionHeight } from '../store.js';
     import { radioSection } from '../store.js';
-
     
 
     export let pageOrComponent;
@@ -18,7 +17,6 @@
     export let componentIndex;
     export let currentComponentObjectArray;
     
-
 
     let tempPagePath;
     let dblClickBool1 = false;
@@ -31,6 +29,8 @@
     const dispatch = createEventDispatcher();
 
     let innerHeight = window.innerHeight;
+
+   
 
 
 
@@ -72,10 +72,6 @@
     }
 
 
-
-
-
-
     function selectPageOrComponent(event) {
         pageOrComponent = event.target.value.toLowerCase();
         dispatch('selectPageOrComponent', {
@@ -85,18 +81,11 @@
 
     function clickAddButton() {
         if (pageOrComponent == 'page') {
-            //pageArray[pageArray.length] = new PageClass(pageArray.length, '/Page' + pageArray.length ,null,'','');
-            //pageIndex = pageArray.length - 1;
-
             dispatch('createPage', {
                 pageOrComponent: pageOrComponent,
-                //pageIndex: pageIndex,
             });
         }
         else if (pageOrComponent == 'component') {
-            //componentArray[pageArray.length] = new ComponentClass(componentArray.length, '/Component' + componentArray.length ,null,'','');
-            //componentIndex = componentArray.length - 1;
-
             dispatch('createPage', {
                 pageOrComponent: pageOrComponent,
                 componentIndex: componentArray.length,
@@ -140,10 +129,6 @@
             let index = returnIndex(pageArray, tempPagePath);
             if (bool == false) {
                 pageArray[index].path = event.currentTarget.value;
-                //pageArray[index].defaultObject.title.set({
-                //    text: tempPagePath,
-                //});
-                //pageArray[index].canvas.renderAll();
             }
             else {
                 event.currentTarget.value = tempPagePath
@@ -160,10 +145,6 @@
             let index = returnIndex(componentArray, tempPagePath);
             if (bool == false) {
                 componentArray[index].path = event.currentTarget.value;
-                //componentArray[index].defaultObject.title.set({
-                //    text: tempPagePath,
-                //});
-                //componentArray[index].canvas.renderAll();
             }
             else {
                 event.currentTarget.value = tempPagePath
@@ -185,10 +166,6 @@
                     let index = returnIndex(pageArray, tempPagePath);
                     if (bool == false) {
                         pageArray[index].path = event.currentTarget.value;
-                        //pageArray[index].defaultObject.title.set({
-                        //    text: tempPagePath,
-                        //});
-                        //pageArray[index].canvas.renderAll();
                     }
                     else {
                         event.currentTarget.value = tempPagePath
@@ -408,7 +385,20 @@
 
     function changePage(event) {
         if (pageOrComponent == 'page') {
+
             if (!deleteButtonBool1) {
+
+                let iconArray = document.getElementsByClassName('changeColor')
+
+                for(let i = 0; i < iconArray.length; i++ ){
+                    let element = iconArray.item(i);
+                    element.style.fill = "#18A0FB";
+                }
+
+
+
+
+
                 currentPageMode = 'page';
 
                 let path = null;
@@ -434,6 +424,7 @@
                     pageOrComponent: pageOrComponent,
                     pageIndex: pageIndex,
                 });
+                
             }
             else {
                 deleteButtonBool1 = false;
@@ -506,6 +497,7 @@
     }
 
 
+
 </script>
 <main style:width={'200px'} style:height={innerHeight-$windowHeight-$toolSectionHeight+'px'}>
 
@@ -543,37 +535,38 @@
             <div style="height: {innerHeight-$windowHeight-$toolSectionHeight-$radioSection-2}px;" class="scroll-style">
                 {#each pageArray as element}
                     {#if element.path !== '//deleted//'}
-                        <!-- svelte-ignore a11y-mouse-events-have-key-events -->
-                        <div class="layer-wrapper-1 flex-row center"  
-                            on:mouseover={deleteButtonMouseOver} 
-                            on:mouseleave={deleteButtonMouseLeave}
-                            on:click={changePage}>
-                            <div class="layer-wrapper-2 flex-column">
-                                <div class="layer-wrapper-3 flex-row space-between">
-                                    
-                                    <div class="icon">
-                                        <svg width="10" height="14" viewBox="0 0 10 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                            <path fill-rule="evenodd" clip-rule="evenodd" d="M0 0H5V1H1V13H9V5H10V14H0V0Z" fill="#8e8e8e"/>
-                                            <rect x="5" width="1" height="5" fill="#8e8e8e"/>
-                                            <path d="M5 5V4H10V5H5Z" fill="#8e8e8e"/>
-                                            <path d="M9.99805 3.99806L9.29094 4.70517L5.29289 0.707122L6 1.5187e-05L9.99805 3.99806Z" fill="#8e8e8e"/>
-                                        </svg>
-                                    </div>
-
-                                    <input type="text" class="page-button-title"
-                                        value={element.path} readonly="true" 
-                                        on:dblclick={pageButtonDblClick} 
-                                        on:blur={pageButtonBlur}
-                                        on:keyup|preventDefault={pageButtonEnter}
-                                        >
-
-                                    <div class="delete-button-wrapper1">
+                            <!-- svelte-ignore a11y-mouse-events-have-key-events -->
+                            <div class="layer-wrapper-1 flex-row center"  
+                                on:mouseover={deleteButtonMouseOver} 
+                                on:mouseleave={deleteButtonMouseLeave}
+                                on:click={changePage}>
+                                <div class="layer-wrapper-2 flex-column">
+                                    <div class="layer-wrapper-3 flex-row space-between">
                                         
-                                    </div>
+                                        <div class="icon">
+                                            <svg width="10" height="14" viewBox="0 0 10 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                <path fill-rule="evenodd" clip-rule="evenodd" d="M0 0H5V1H1V13H9V5H10V14H0V0Z" fill="#8E8E8E"/>
+                                                <rect x="5" width="1" height="5" fill="#8E8E8E"/>
+                                                <path d="M5 5V4H10V5H5Z" fill="#8E8E8E"/>
+                                                <path d="M9.99805 3.99806L9.29094 4.70517L5.29289 0.707122L6 1.5187e-05L9.99805 3.99806Z" fill="#8E8E8E"/>
+                                            </svg>
+                                        </div>
 
+                                        <input type="text" class="page-button-title"
+                                            value={element.path} readonly="true" 
+                                            on:dblclick={pageButtonDblClick} 
+                                            on:blur={pageButtonBlur}
+                                            on:keyup|preventDefault={pageButtonEnter}
+                                            >
+
+                                        <div class="delete-button-wrapper1">
+                                            
+                                        </div>
+
+                                    </div>
                                 </div>
                             </div>
-                        </div>
+                        
                     {/if}
 
                 {/each}
@@ -823,7 +816,7 @@
     .page-button-title {
         color: #404040;
         font-size: 12px;
-        font-weight: 600;
+        font-weight: 400;
         width: 90px;
         border: 0;
         height: 20px;

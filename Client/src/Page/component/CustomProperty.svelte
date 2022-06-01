@@ -8,7 +8,6 @@
     import CustomTextField from './CustomTextField.svelte';
     import CustomColorPicker from './CustomColorPicker.svelte';
     import CustromHr from './CustomHr.svelte'
-    import CustomSelectComponent from './CustomSelectComponent.svelte'
     import CustomEventProperty from './CustomEventProperty.svelte';
     import CustomCSSEditor from './CustomCSSEditor.svelte';
     import CustomAlignButton from './CustomAlignButton.svelte';
@@ -23,12 +22,9 @@
     export let pageArray;
     export let currentPageMode;
     export let propertyOrEvent = 'property';
-
-    let CustomSelectComponentChild;
-    let CustomEventComponentChild;
-
-
     
+
+
 
     class CurrentObjectClass {
         constructor() {
@@ -74,14 +70,6 @@
 
 	const dispatch = createEventDispatcher();
 
-    /*
-    export function refresh(data, type) {
-        if (type == 'select')
-            CustomSelectComponentChild.refreshFunc(data);
-        else if (type == 'event')
-            CustomEventComponentChild.refreshFunc(data);
-    } 
-    */
 
 
 </script>
@@ -297,6 +285,9 @@
 
             {:else if type == 'componentImage'}
 
+                <div class="blank"></div>
+                <div class="blank"></div>
+
                 <CustomAlignButton on:alignObject={(event)=>{
                     dispatch('alignComponentImage', {
                         type: event.detail.type,
@@ -304,7 +295,8 @@
                 }}></CustomAlignButton>
 
                 <div class="blank"></div>
-                {currentObject.id}
+                
+                
                 <CustomTextField type={2} title={["X", "Y"]} data={[currentObject.x, currentObject.y]} dataType={'int'} on:message={(event)=>{
                     currentObject.x = event.detail.data[0] * 1;
                     currentObject.y = event.detail.data[1] * 1;
@@ -313,26 +305,11 @@
                         y: currentObject.y,
                     });
                 }}></CustomTextField>
-
-            {:else if type == 'page'}
-                <CustomSelectComponent bind:this={CustomSelectComponentChild} {componentArray} {currentSelect} on:selectComponent1={(event)=>{
-                    dispatch('selectComponent2', {
-                        data: event.detail.data,
-                    });
-                }}
-                on:deselectComponent1={(event)=>{
-                    //console.log(event.detail.data)
-                    dispatch('deselectComponent2', {
-                        data: event.detail.data,
-                        componentIndex: event.detail.componentIndex,
-                        list: event.detail.list,
-                    });
-                }}/>
-                
             {/if}
+            
 
         {:else if propertyOrEvent == 'event'}
-            <CustomEventProperty {currentObject} {pageArray} bind:this={CustomEventComponentChild}
+            <CustomEventProperty {currentObject} {pageArray}
 
             on:when={(event)=>{
                 dispatch('eventWhen', {
@@ -363,7 +340,6 @@
 
     </div>
 
-    
 
 
     <div>
@@ -379,11 +355,9 @@
     }
 
     main {
-        height: 100%;
         display: flex;
         flex-direction: column;
         justify-content: space-between;
     }
     
 </style>
-
