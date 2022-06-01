@@ -92,6 +92,8 @@
         {#if propertyOrEvent == 'property'}
 
             {#if type == 'rect'}
+                <div class="blank"></div>
+
                 <CustomAlignButton on:alignObject={(event)=>{
                     dispatch('alignObject', {
                         type: event.detail.type,
@@ -150,6 +152,9 @@
                 }}></CustomColorPicker>
                 
             {:else if type == 'ellipse'}
+
+                <div class="blank"></div>
+
                 <CustomAlignButton on:alignObject={(event)=>{
                     dispatch('alignObject', {
                         type: event.detail.type,
@@ -209,6 +214,8 @@
                 
 
             {:else if type == 'i-text'}
+            
+                <div class="blank"></div>
 
                 <CustomAlignButton on:alignObject={(event)=>{
                     dispatch('alignObject', {
@@ -238,10 +245,19 @@
 
                 <div class="blank"></div>
 
-                <CustomTextField type={1} title={["Fs"]} data={[currentObject.fontSize]} dataType={'int'} on:message={(event)=>{
+                <CustomTextField type={1} title={["Font Size"]} size={[148, 40]} data={[currentObject.fontSize]} dataType={'int'} on:message={(event)=>{
                     currentObject.fontSize = event.detail.data[0] * 1;
                     dispatch('editObjectProperty', {
                         fontSize: currentObject.fontSize,
+                    });
+                }}></CustomTextField>
+
+                <div class="blank"></div>
+
+                <CustomTextField type={1} title={["Line Space"]} size={[148, 40]} data={[currentObject.lineHeight]} dataType={'float'} on:message={(event)=>{
+                    currentObject.lineHeight = event.detail.data[0] * 1;
+                    dispatch('editObjectProperty', {
+                        lineHeight: currentObject.lineHeight,
                     });
                 }}></CustomTextField>
 

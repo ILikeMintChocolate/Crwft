@@ -84,6 +84,12 @@
                 });
                 event.currentTarget.blur();
             }
+            else if (dataType == 'float') {
+                dispatch('message', {
+                    data: data,
+                });
+                event.currentTarget.blur();
+            }
         }
 	}
 
@@ -221,7 +227,7 @@
         text-align: left;
         width: 16px;
         height: 16px;
-        margin-top: 5px;
+        margin-top: 4px;
         margin-left: 10px;
     }
 
