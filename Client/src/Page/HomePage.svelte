@@ -11,6 +11,8 @@
     import { firebaseDB } from './store.js';
     import { firebaseApp } from './store.js';
 
+    $loadArray = null;
+
 
     let innerWidth = window.innerWidth;
     let innerHeight = window.innerHeight;
@@ -42,13 +44,15 @@
         return user.uid;
     };
 
-    //const normalizeData = (tempArray1) => {
-    //    for (let i = 0; i < tempArray1.length; i++) {
-    //        let date = new Date(tempArray1[i].changeDate['seconds'] * 1000);
-    //        tempArray1[i].changeDate = `${date.getFullYear()}/${date.getMonth()+1}/${date.getDate()} ${date.getHours()}:${date.getMinutes()}`;
-    //    }
-    //    return tempArray1;
-    //}
+    const normalizeData = (tempArray1) => {
+        for (let i = 0; i < tempArray1.length; i++) {
+            let date1 = new Date(tempArray1[i].createDate['seconds'] * 1000);
+            tempArray1[i].createDate = `${date1.getFullYear()}/${date1.getMonth()+1}/${date1.getDate()} ${date1.getHours()}:${date1.getMinutes()}`;
+            let date2 = new Date(tempArray1[i].editedDate['seconds'] * 1000);
+            tempArray1[i].editedDate = `${date2.getFullYear()}/${date2.getMonth()+1}/${date2.getDate()} ${date2.getHours()}:${date2.getMinutes()}`;
+        }
+        return tempArray1;
+    }
 
     async function getOrdersByUser() {
         const tempUserUID = getUserUID();
@@ -61,9 +65,10 @@
             }
         });
 
-        //let tempArray2 = await normalizeData(tempArray1);
+        let tempArray2 = await normalizeData(tempArray1);
 
-        return tempArray1;
+
+        return tempArray2;
     }
 
     onMount(async () => {
@@ -90,7 +95,7 @@
     
     
 
-    console.log(fileArray.length)
+    
     
 
 </script>
@@ -127,6 +132,15 @@
                 push(`/editor/${fileArray.length}`)
             }}>
                 <div class="page-icon-1">
+                    <svg width="12" height="16" viewBox="0 0 12 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="3" y="11" width="6" height="1" fill="#FFFCEF"/>
+                    <rect x="3" y="9" width="6" height="1" fill="#FFFCEF"/>
+                    <rect x="3" y="7" width="6" height="1" fill="#FFFCEF"/>
+                    <path fill-rule="evenodd" clip-rule="evenodd" d="M0 0H8V1H1V15H11V4H12V16H0V0Z" fill="#FFFCEF"/>
+                    <rect x="7" y="0.999985" width="1" height="3" fill="#FFFCEF"/>
+                    <rect x="7" y="4.99998" width="1" height="4" transform="rotate(-90 7 4.99998)" fill="#FFFCEF"/>
+                    <rect x="8.00854" y="0.0205994" width="5.63619" height="1.19861" transform="rotate(45 8.00854 0.0205994)" fill="#FFFCEF"/>
+                    </svg>
                 </div>
                 <div id="button-title">
                     New File
@@ -143,24 +157,32 @@
                         <div class="grid-item" on:click={(event) => {
                             let target = event.path[0]
                             fileArray.forEach((element) => {
-                                if (element.projectName == target.childNodes[0].childNodes[2].innerHTML) {
+
+                                let tempProjectName;
+                                
+                                if (event.target.parentNode.classList.contains('grid-item'))
+                                    tempProjectName = event.target.parentNode.childNodes[2].childNodes[2].innerText
+                            
+                                else if (event.target.parentNode.classList.contains('info-wrapper'))
+                                    tempProjectName = event.target.parentNode.childNodes[2].innerText
+
+                                if (element.projectName == tempProjectName)
                                     $loadArray = element
-                                    console.log(element)
-                                }
                                     
                             });
                             
                             push(`/editor/${$loadArray.projectName}`)
                         }}>
-                            <!--<img class="image-class" src={file.image}>-->
-                            <div class="flex-row">
+                            <!-- svelte-ignore a11y-missing-attribute -->
+                            <img class="image-class" src={file.imageSrc}>
+                            <div class="flex-row info-wrapper">
                                 <div class="page-icon-2">
                                 </div>
                                 <div class="file-title">
                                     {file.projectName}
                                 </div>
                                 <div class="file-date">
-                                    {file.changeDate}
+                                    {file.editedDate}
                                 </div>
                             </div>
                         </div>
@@ -261,7 +283,6 @@
     .page-icon-1 {
         width: 12px;
         height: 16px;
-        background-image: url('../icon/pageIcon.png');
         margin-top: 10px;
     }
 

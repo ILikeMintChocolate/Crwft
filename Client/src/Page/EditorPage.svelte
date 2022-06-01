@@ -38,12 +38,17 @@
     import { firebaseDB } from './store.js';
     import { firebaseApp } from './store.js';
 
+    export let params = {}
+
     let innerWidth = window.innerWidth;
     let innerHeight = window.innerHeight;
 
     let CustomPropertyChild;
     let CustomSelectComponentChild;
     let CustomSelectComponentChild2;
+
+
+
 
 
     class ThemeClass {
@@ -71,6 +76,7 @@
             this.src = null;
             this.rotate = null;
             this.fontSize = null;
+            this.lineHeight = null;
             this.stroke = null;
             this.strokeWidth = null;
             this.tagType = null;
@@ -227,6 +233,15 @@
 
     onMount(async () => {
 
+            
+
+
+
+
+
+
+
+
         fabric.Object.prototype.set({
             borderColor: "#18A0FB",
             cornerColor: "#18A0FB",
@@ -352,6 +367,11 @@
                         else {
                             ui.objectType = 'page';
                         }
+
+                        pageArray[0].selectComponent.forEach((element, index2) => {
+                            if (element.componentId != '//deleted//') 
+                                ui.currentSelect[index2] = String(element.componentIndex);
+                        });
 
                         pageArray[ui.pageIndex].canvas.remove(this)
                     }
@@ -504,6 +524,7 @@
                             else if (activeObject.type == 'i-text') {
                                 ui.objectType = 'i-text';
                                 currentObject.fontSize = activeObject.fontSize;
+                                currentObject.lineHeight = activeObject.lineHeight;
                             }
                             currentObject.activeObject = activeObject;
                         }
@@ -645,7 +666,7 @@
                                 originY: 'top',
                                 width: 20,
                                 editable: true,
-                                hasControls: false,
+                                hasControls: true,
                                 fontSize: 20,
                                 fill: '#000000',
                                 fontFamily: 'Nunito',
@@ -655,6 +676,7 @@
                             0,
                             'i-text',
                         )
+                        
                         componentArray[0].canvas.add(componentArray[0].object[objectIndex].object);
                         currentObject.object = componentArray[0].object[objectIndex].object;
                         currentObject.id = currentObject.object.id;
@@ -669,6 +691,7 @@
                         currentObject.x = componentArray[0].object[objectIndex].object.left;
                         currentObject.y = componentArray[0].object[objectIndex].object.top;
                         currentObject.fontSize = componentArray[0].object[objectIndex].object.fontSize;
+                        currentObject.lineHeight = componentArray[0].object[objectIndex].object.lineHeight;
                         currentObject.color = currentObject.object.fill.substr(1);
                         currentObject.Event.when = null;
                         currentObject.Event.do = null;
@@ -930,6 +953,8 @@
                         ui.objectType = 'ellipse';
                     else if (activeObject.type == 'i-text')
                         ui.objectType = 'i-text';
+                    
+                        
                     currentObject.width = parseInt(activeObject.getScaledWidth());
                     currentObject.height = parseInt(activeObject.getScaledHeight());
                     activeObject.set({
@@ -942,6 +967,7 @@
                     })
                     componentArray[0].canvas.renderAll()
                 }
+
             });
             
             function resetCurrentObject() {
@@ -1049,24 +1075,17 @@
         );
                 
         setCanvasZoom(); 
-
+console.log(params.id*1+1)
         // 세이브파일 있음
         if ($loadArray != null) {
             saveFile = $loadArray;
             projectInfo.createDate = saveFile.createDate;
             projectInfo.projectName = saveFile.projectName;
-            
             loadSaveFile($loadArray);
-            
         }
         // 새로만들기
         else { 
-            try {
-                projectInfo.projectName = 'Project' + (params.id*1+1);
-            } catch (error) {
-                projectInfo.projectName = 'Project1';
-            }
-            
+            projectInfo.projectName = 'Project' + (params.id*1+1);
             projectInfo.createDate = new Date();
         }
 
@@ -1338,10 +1357,18 @@
                             currentObject.object = activeObject;
                             currentObject.x = activeObject.left;
                             currentObject.y = activeObject.top;
+                            currentObject.id = activeObject.id;
                         }
                         else {
                             ui.objectType = 'page';
                         }
+
+                        pageArray[0].selectComponent.forEach((element, index2) => {
+                            if (element.componentId != '//deleted//') 
+                                ui.currentSelect[index2] = String(element.componentIndex);
+                        });
+
+                        pageArray[ui.pageIndex].canvas.remove(this)
                     }
                 }
 
@@ -1403,7 +1430,8 @@
             ui.currentSelect = Array(0); 
 
             pageArray[ui.pageIndex].selectComponent.forEach((element, index) => {
-                ui.currentSelect[index] = String(element.componentIndex);
+                if (element.componentId != '//deleted//')
+                    ui.currentSelect[index] = String(element.componentIndex);
             });
 
             CustomSelectComponentChild.refresh(ui.currentSelect);
@@ -1650,6 +1678,7 @@
                             else if (activeObject.type == 'i-text') {
                                 ui.objectType = 'i-text';
                                 currentObject.fontSize = activeObject.fontSize;
+                                currentObject.lineHeight = activeObject.lineHeight;
                             }
                             currentObject.activeObject = activeObject;
                             
@@ -1814,6 +1843,7 @@
                         currentObject.x = componentArray[length].object[objectIndex].object.left;
                         currentObject.y = componentArray[length].object[objectIndex].object.top;
                         currentObject.fontSize = componentArray[length].object[objectIndex].object.fontSize;
+                        currentObject.lineHeight = componentArray[length].object[objectIndex].object.lineHeight;
                         currentObject.color = currentObject.object.fill.substr(1);
                         currentObject.Event.when = null;
                         currentObject.Event.do = null;
@@ -2144,10 +2174,9 @@
     }
 
 
-    function deleteComponentImage(deleteComponentId, componentIndex, list) {
+    function deleteComponentImage(deleteComponentId, ) {
 
         console.log(deleteComponentId)
-        console.log(componentIndex)
 
         pageArray[ui.pageIndex].selectComponent.forEach(element => {
             if (element.componentIndex == deleteComponentId) {
@@ -2398,9 +2427,12 @@
 
     async function uploadsaveFile() {
         let docData = {
-            projectName: "Project1",
+            projectName: projectInfo.projectName,
+            createDate: projectInfo.createDate,
+            editedDate: new Date(),
             componentArray: [],
             pageArray: [],
+            imageSrc: componentArray[0].componentProperty.imageSrc,
         }
 
         componentArray.forEach((element, index) => {
@@ -2436,6 +2468,7 @@
                         "id": element2.object.id,
                         "color": element2.object.fill.substr(1),
                         "fontSize": element2.object.fontSize,
+                        "lineHeight": element2.object.lineHeight,
                         "text": element2.object.text,
                         "when": element2.Event.when,
                         "do": element2.Event.do,
@@ -2562,6 +2595,7 @@
                                 editable: true,
                                 hasControls: false,
                                 fontSize: obj.fontSize,
+                                lineHeight: obj.lineHeight,
                                 fill: '#' + obj.color,
                                 fontFamily: 'Nunito',
                                 fontWeight: 200,
@@ -2687,6 +2721,7 @@
                                 editable: true,
                                 hasControls: false,
                                 fontSize: obj.fontSize,
+                                lineHeight: obj.lineHeight,
                                 fill: '#' + obj.color,
                                 fontFamily: 'Nunito',
                                 fontWeight: 200,
@@ -2760,9 +2795,11 @@
                 
                 if (element.selectComponent.length > 0) {
                     element.selectComponent.forEach((element2, i2) => {
-                        pageArray[0].selectComponent[i2] = new SaveFileClass(element2.componentId, element2.componentImage, element2.componentIndex,
-                            element2.width, element2.height, element2.x, element2.y
-                        );
+                        if (element2.componentId != '//deleted//') {
+                            pageArray[0].selectComponent[i2] = new SaveFileClass(element2.componentId, element2.componentImage, element2.componentIndex,
+                                element2.width, element2.height, element2.x, element2.y
+                            );
+                        }
                     });
                 }
 
@@ -2770,7 +2807,7 @@
                 ui.currentSelect = Array(0);
 
                 pageArray[0].selectComponent.forEach((element, index2) => {
-                    if (element.componentId != '///defaultBox///') {
+                    if (element.componentId != '//deleted//') {
                         ui.currentSelect[index2] = String(element.componentIndex);
                         createComponentImage(element, 0)
                     }
@@ -2802,7 +2839,7 @@
                 ui.currentSelect = Array(0);
 
                 pageArray[i].selectComponent.forEach((element, index2) => {
-                    if (element.componentId != '///defaultBox///') {
+                    if (element.componentId != '//deleted//') {
                         ui.currentSelect[index2] = String(element.componentIndex);
                         createComponentImage(element, i)
                     }
@@ -2830,7 +2867,8 @@
         document.getElementById('canvas-page-0-wrapper').style.display = 'block';
 
         pageArray[0].selectComponent.forEach((element, index2) => {
-            ui.currentSelect[index2] = String(element.componentIndex);
+            if (element.componentId != '//deleted//') 
+                ui.currentSelect[index2] = String(element.componentIndex);
         });
 
         CustomSelectComponentChild.refresh(ui.currentSelect);        
@@ -2923,6 +2961,7 @@
                         //폰트
                         if(obj.tagType == 'i-text'){
                             fileContents[filesIndex] += '\t\tfont-size: '+obj.object.fontSize+'px;\n';
+                            fileContents[filesIndex] += '\t\tline-height: '+obj.object.lineHeight+';\n';
                         } else if(obj.tagType == 'ellipse'){
                             fileContents[filesIndex] += '\t\tborder-radius: 50%;\n';
                         }
@@ -2930,10 +2969,12 @@
                     }
                 });
                 //css 완성되면 넣기
-                //fileContents[filesIndex] += comp.css;
+                if(comp.css != null)
+                    fileContents[filesIndex] += comp.css;
                 fileContents[filesIndex] += '\n<'+'/style>\n';
                 fileNames[filesIndex] = "component/"+ comp.path + ".svelte";
                 filesIndex+=1;
+
             }
         });
     }
@@ -3238,7 +3279,8 @@
                     ui.currentSelect = Array(0); 
 
                     pageArray[ui.pageIndex].selectComponent.forEach((element, index) => {
-                        ui.currentSelect[index] = String(element.componentIndex);
+                        if (element.componentId != '//deleted//')
+                            ui.currentSelect[index] = String(element.componentIndex);
                     });
 
                     pageArray.forEach((element) => {
@@ -3251,7 +3293,12 @@
                     });
 
                     
-                    CustomSelectComponentChild.refresh(ui.currentSelect);
+                    try {
+                        CustomSelectComponentChild.refresh(ui.currentSelect);
+                    } catch (error) {
+                        
+                    }
+                    
 
 
 
@@ -3353,6 +3400,7 @@
                         else if (element.type == 'i-text'){
                             ui.objectType = 'i-text';
                             currentObject.fontSize = element.fontSize;
+                            currentObject.lineHeight = element.lineHeight;
                         }
                         currentObject.id = element.id;
                         currentObject.x = element.left;
@@ -3484,9 +3532,15 @@
                         activeObject.set('stroke', '#' +  currentObject.stroke)
                         activeObject.set('strokeWidth', currentObject.strokeWidth)
                     }
+
                     if (event.detail.fontSize != undefined) {
                         currentObject.fontSize = event.detail.fontSize;
                         activeObject.set('fontSize', currentObject.fontSize)
+                    }
+
+                    if (event.detail.lineHeight != undefined) {
+                        currentObject.lineHeight = event.detail.lineHeight;
+                        activeObject.set('lineHeight', currentObject.lineHeight)
                     }
 
                     
