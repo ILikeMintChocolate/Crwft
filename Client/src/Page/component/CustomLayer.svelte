@@ -159,6 +159,7 @@
 
     function pageButtonEnter(event) {
         if (window.event.keyCode == 13) {
+            console.log(event)
             if (pageOrComponent == 'page') {
                 dblClickBool1 = true;
                 if (event.code == 'Enter' || event.code == 'NumpadEnter') {
@@ -174,6 +175,8 @@
                     dispatch('pageButtonEnter', {
                         pageOrComponent: pageOrComponent,
                         pageArray: pageArray,
+                        pageArrayIndex: index,
+                        componentPagePath: pageArray[index].path,
                     });
                 }
             }
@@ -626,7 +629,7 @@
                 <div class="page-array-box-2">
                     {#each currentComponentObjectArray as element}
                         {#if element.object != null}
-                            {#if element.object.id != '//**//'}
+                            {#if element.object.id != '//deleted//'}
                                 <!--svelte-ignore a11y-mouse-events-have-key-events-->
                                 <div class="object-button-wrapper-1 flex-row center" on:click={clickActiveObject}>
                                     <div class="object-button-wrapper-2 flex-column">
