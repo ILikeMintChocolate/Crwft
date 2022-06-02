@@ -3092,8 +3092,8 @@
     }
     function requestData(isUpdated, todo) {
         // todo : 'downloadSvelte', 'downloadCompiled', 'showDemoPage'
-        var userName = 'aneunne7';
-        var projectName = 'defaultProject';
+        var userName = $userUID;
+        var projectName = projectInfo.projectName;
         if(isUpdated == 0){
             const form1 = document.createElement('form');
             form1.method = "post";
