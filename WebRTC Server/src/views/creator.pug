@@ -1,0 +1,32 @@
+doctype html
+html(lang="en")
+    head
+        meta(charset="UTF-8")
+        meta(http-equiv="X-UA-Compatible", content="IE=edge")
+        meta(name="viewport", content="width=device-width, initial-scale=1.0")
+        link(rel="stylesheet", href="./public/css/creator.css")
+        title Meetings
+    body 
+        div#call(class="call") 
+            div(class="center-row")
+                button#shareScreen
+                    div 화면 공유
+            div(class="center-row")
+                div#roomCode
+            div#chatRoom
+                ul#chatBox
+                form#chatForm
+                    input(spellcheck = "false" type="text" placeholder="채팅 입력")
+                    button
+                        svg(width="12" height="14" viewBox="0 0 12 14" fill="none" xmlns="http://www.w3.org/2000/svg")
+                            path(d="M0.00571428 14L12 7L0.00571428 0L0 5.44444L0.00571428 7L0 8.55556L0.00571428 14Z" fill="#18A0FB")
+
+
+
+
+
+
+        script(src="/socket.io/socket.io.js")
+        script(src="/public/js/app.js")
+
+        
