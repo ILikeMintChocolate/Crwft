@@ -1,5 +1,7 @@
-[![logo](https://user-images.githubusercontent.com/99123542/171640603-4f29f525-0137-48d4-a948-dab27b468f46.png)](https://github.com/ILikeMintChocolate/Crwft)
-
+<a href="https://github.com/ILikeMintChocolate/Crwft">
+  <img src="https://user-images.githubusercontent.com/99123542/171640603-4f29f525-0137-48d4-a948-dab27b468f46.png" width="200" height="100>
+</a>
+                                                                                                                                     
 # crwft / WebRTC Server
 
 크래프트의 WebRTC Server 입니다.
