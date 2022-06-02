@@ -2970,8 +2970,8 @@
                         fileContents[filesIndex] += '\t\theight: '+Math.ceil(obj.object.height)+'px;\n';
                         
                         console.log(obj.object.left);
-                        fileContents[filesIndex] += '\t\tleft: '+Math.ceil(comp.defaultObject.box.width/2 + obj.object.left)+'px;\n';
-                        fileContents[filesIndex] += '\t\ttop: '+Math.ceil(comp.defaultObject.box.height/2 - 20 + obj.object.top)+'px;\n';
+                        fileContents[filesIndex] += '\t\tleft: '+Math.ceil(obj.object.left)+'px;\n';
+                        fileContents[filesIndex] += '\t\ttop: '+Math.ceil(obj.object.top)+'px;\n';
                         //배경색
                         if(obj.tagType == 'i-text'){
                             fileContents[filesIndex] += '\t\tcolor: '+obj.object.fill+';\n';
