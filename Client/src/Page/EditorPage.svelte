@@ -2929,7 +2929,7 @@
                 fileContents[filesIndex] += '<'+'/script>\n';
                 fileContents[filesIndex] += '<'+'main>\n';
                 comp.object.forEach(obj => {
-                    if(obj.object.id != '//**//'){
+                    if(obj.object.id != '//deleted//'){
                         fileContents[filesIndex] += '\t<' + 'div ';
                         fileContents[filesIndex] += 'id="'+obj.object.id+'"';
                         if(obj.Event.when != null){
@@ -2964,7 +2964,7 @@
                 
                 fileContents[filesIndex] += '\n<' + 'style>\n';
                 comp.object.forEach(obj => {
-                    if(obj.object.id != '//**//'){
+                    if(obj.object.id != '//deleted//'){
                         fileContents[filesIndex] += "\t#" + obj.object.id + " {\n";
                         //넓이, 높이, 위치 좌표
                         fileContents[filesIndex] += '\t\tposition: absolute;\n';
