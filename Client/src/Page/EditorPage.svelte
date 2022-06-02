@@ -2949,7 +2949,10 @@
                         }
                         fileContents[filesIndex] += '>';
                         if(obj.tagType == 'i-text') {
-                            fileContents[filesIndex] += obj.object.text.replace(",", "/ST47B2F5");
+                            obj.object.text = obj.object.text.replace(/,/g, "/ST47B2F5");
+                            obj.object.text = obj.object.text.replace(/\n/g, "<br>");
+                            console.log(obj.object.text);
+                            fileContents[filesIndex] += obj.object.text;
                         }
                         fileContents[filesIndex] += '<' + '/div' + '>\n';
                     }
