@@ -192,6 +192,7 @@
             this.isScale = false;
             this.tempArray = new Array(0);
             this.currentSelect = new Array(0);
+            this.changeText = 'Save';
         }
     }
 
@@ -298,7 +299,7 @@
             });
             pageArray[0].defaultObject.title.selectable = false;
             pageArray[0].defaultObject.title.hasControls = false;
-
+            pageArray[0].canvas.preserveObjectStacking = true;
             pageArray[0].canvas.add(pageArray[0].defaultObject.box);
             pageArray[0].canvas.add(pageArray[0].defaultObject.title);
 
@@ -367,6 +368,8 @@
                         else {
                             ui.objectType = 'page';
                         }
+
+                        console.log(ui.objectType)
 
                         pageArray[0].selectComponent.forEach((element, index2) => {
                             if (element.componentId != '//deleted//') 
@@ -457,7 +460,7 @@
                     if (activeObject.type == "rect" || activeObject.type == "ellipse") {
                         componentArray[0].object.forEach(function(element) {
                             if(element.object.id === activeObject.id) {
-                                componentArray[0].object[element.index].object.id = '//**//';
+                                componentArray[0].object[element.index].object.id = '//deleted//';
                             }
                         })
                         componentArray[0].canvas.remove(activeObject);
@@ -467,7 +470,7 @@
                         if (!activeObject.isEditing){
                             componentArray[0].object.forEach(function(element) {
                                 if(element.object.id === activeObject.id) {
-                                    componentArray[0].object[element.index].object.id = '//**//';
+                                    componentArray[0].object[element.index].object.id = '//deleted//';
                                 }
                             })
 
@@ -1075,7 +1078,7 @@
         );
                 
         setCanvasZoom(); 
-console.log(params.id*1+1)
+
         // 세이브파일 있음
         if ($loadArray != null) {
             saveFile = $loadArray;
@@ -1235,7 +1238,7 @@ console.log(params.id*1+1)
             pageArray[length].canvas.setWidth(innerWidth - 400);
             pageArray[length].canvas.setHeight(innerHeight - 90);
             pageArray[length].defaultObject.box = new fabric.Rect({
-                id: '/Page' + length,
+                id: '///defaultBox///',
                 left: 0,
                 top: 0,
                 strokeWidth: 0,
@@ -1243,9 +1246,6 @@ console.log(params.id*1+1)
                 stroke: "#ffffff",
                 width: 1920,
                 height: 1080,
-                
-                                originX: 'left',
-                                originY: 'top',
             })
             pageArray[length].defaultObject.title = new fabric.Textbox('/Page' + length, {
                 fontFamily: 'Nunito',
@@ -1273,7 +1273,7 @@ console.log(params.id*1+1)
             
             pageArray[length].defaultObject.title.selectable = false;
             pageArray[length].defaultObject.title.hasControls = false;
-
+            pageArray[length].canvas.preserveObjectStacking = true;
             pageArray[length].canvas.add(pageArray[length].defaultObject.box);
             pageArray[length].canvas.add(pageArray[length].defaultObject.title);
         
@@ -1348,6 +1348,7 @@ console.log(params.id*1+1)
             pageArray[length].canvas.on('mouse:down', function(event) {
                 if (event.button == 1) {
                     if (ui.mouseType == 1) {
+                        console.log(event.target)
                         if (event.target==null) {
                             ui.objectType = 'page';
                         }
@@ -1363,7 +1364,9 @@ console.log(params.id*1+1)
                             ui.objectType = 'page';
                         }
 
-                        pageArray[0].selectComponent.forEach((element, index2) => {
+                        console.log(ui.objectType)
+
+                        pageArray[length].selectComponent.forEach((element, index2) => {
                             if (element.componentId != '//deleted//') 
                                 ui.currentSelect[index2] = String(element.componentIndex);
                         });
@@ -1615,7 +1618,7 @@ console.log(params.id*1+1)
                     if (activeObject.type == "rect" || activeObject.type == "ellipse") {
                         componentArray[ui.componentIndex].object.forEach(function(element) {
                             if(element.object.id === activeObject.id) {
-                                componentArray[ui.componentIndex].object[element.index].object.id = '//**//';
+                                componentArray[ui.componentIndex].object[element.index].object.id = '//deleted//';
                             }
                         })
                         componentArray[ui.componentIndex].canvas.remove(activeObject);
@@ -1625,7 +1628,7 @@ console.log(params.id*1+1)
                         if (!activeObject.isEditing){
                             componentArray[ui.componentIndex].object.forEach(function(element) {
                                 if(element.object.id === activeObject.id) {
-                                    componentArray[ui.componentIndex].object[element.index].object.id = '//**//';
+                                    componentArray[ui.componentIndex].object[element.index].object.id = '//deleted//';
                                 }
                             })
 
@@ -2132,15 +2135,14 @@ console.log(params.id*1+1)
     function loadImage(width, height, index) {
         let tempCanvas = componentArray[index].canvas;
         tempCanvas.discardActiveObject();
+
         var sel = new fabric.ActiveSelection(tempCanvas.getObjects(), {
             canvas: tempCanvas,
         });
+
         tempCanvas.setActiveObject(sel);
         tempCanvas.viewportTransform = [1, 0, 0, 1, 0, 0];
         tempCanvas.requestRenderAll();
-
-
-
         
         try {
 
@@ -2171,6 +2173,15 @@ console.log(params.id*1+1)
 
         } catch (error) {
         }
+
+        componentArray.forEach(element => {
+            try {
+                element.canvas.discardActiveObject();
+                element.canvas.renderAll();
+            } catch (error) {
+                
+            }
+        });
     }
 
 
@@ -2207,7 +2218,7 @@ console.log(params.id*1+1)
     }
 
     function createComponentImage(data, pageI) {
-
+        
         if (pageI == null)
             pageI = ui.pageIndex;
 
@@ -2480,8 +2491,8 @@ console.log(params.id*1+1)
             docData.componentArray.push({
                 index: element.index,
                 path: element.path,
-                canvas: JSON.stringify(element.canvas),
-                canvasData: JSON.stringify(element.canvas.toObject(['id'])),
+                //canvas: JSON.stringify(element.canvas),
+                //canvasData: JSON.stringify(element.canvas.toObject(['id'])),
                 zoom: element.zoom,
                 canvasId: element.canvasId,
                 width: element.defaultObject.box.width,
@@ -2519,11 +2530,16 @@ console.log(params.id*1+1)
                 height: element.defaultObject.box.height,
                 canvasWrapperId: element.canvasWrapperId,
                 selectComponent: selectComponent,
-            });
+            })
         })
 
 
-        await setDoc(doc($firebaseDB, $userUID, projectInfo.projectName), docData);
+        await setDoc(doc($firebaseDB, $userUID, projectInfo.projectName), docData).then(function() {
+            ui.changeText = 'Done';
+            setTimeout(function() {
+                ui.changeText = 'Save';
+            }, 2000);
+        });
     }
 
 
@@ -2534,84 +2550,87 @@ console.log(params.id*1+1)
                 // 0페이지
                 componentArray[0].path = element.path;
                 componentArray[0].defaultObject.title.text = element.path;
-                componentArray[0].canvas.loadFromJSON(element.canvasData, function() {
-                    componentArray[0].canvas.renderAll();
-                });  
+                //componentArray[0].canvas.loadFromJSON(element.canvasData, function() {
+                //    componentArray[0].canvas.renderAll();
+                //});  
                 componentArray[0].componentProperty.width = element.componentProperty.width;
                 componentArray[0].componentProperty.height = element.componentProperty.height;
                 componentArray[0].componentProperty.imageSrc = element.componentProperty.imageSrc;
 
                 element.object.forEach((obj, i2) => {
-                    if (obj.tagType == "rect") {
-                        componentArray[0].object[i2] = new ObjectClass(
-                            new fabric.Rect({
-                                id: obj.id,
-                                left: obj.x,
-                                top: obj.y,
-                                originX: 'left',
-                                originY: 'top',
-                                width: obj.width,
-                                height: obj.height,
-                                angle: 0,
-                                fill: '#' + obj.color,
-                                stroke: '#' + obj.stroke,
-                                strokeWidth: obj.strokeWidth,
-                                transparentCorners: false,
-                            }),
-                            obj.index,
-                            obj.componentIndex,
-                            obj.tagType,
-                        )
-                    }
-                    else if (obj.tagType == "ellipse") {
-                        componentArray[0].object[i2] = new ObjectClass(
-                            new fabric.Rect({
-                                id: obj.id,
-                                left: obj.x,
-                                top: obj.y,
-                                originX: 'left',
-                                originY: 'top',
-                                rx: obj.width,
-                                ry: obj.height,
-                                angle: 0,
-                                fill: '#' + obj.color,
-                                stroke: '#' + obj.stroke,
-                                strokeWidth: obj.strokeWidth,
-                                transparentCorners: false,
-                            }),
-                            obj.index,
-                            obj.componentIndex,
-                            obj.tagType,
-                        )
-                    }
-                    else if (obj.tagType == "i-text") {
-                        componentArray[0].object[i2] = new ObjectClass(
-                            new fabric.IText(obj.text, {
-                                id: obj.id,
-                                left: obj.x,
-                                top: obj.y,
-                                originX: 'left',
-                                originY: 'top',
-                                editable: true,
-                                hasControls: false,
-                                fontSize: obj.fontSize,
-                                lineHeight: obj.lineHeight,
-                                fill: '#' + obj.color,
-                                fontFamily: 'Nunito',
-                                fontWeight: 200,
-                            }),
-                            obj.index,
-                            obj.componentIndex,
-                            obj.tagType,
-                        )
-                    }
+                    if (obj.id != '//deleted//') {
+                        if (obj.tagType == "rect") {
+                            componentArray[0].object[i2] = new ObjectClass(
+                                new fabric.Rect({
+                                    id: obj.id,
+                                    left: obj.x,
+                                    top: obj.y,
+                                    originX: 'left',
+                                    originY: 'top',
+                                    width: obj.width,
+                                    height: obj.height,
+                                    angle: 0,
+                                    fill: '#' + obj.color,
+                                    stroke: '#' + obj.stroke,
+                                    strokeWidth: obj.strokeWidth,
+                                    transparentCorners: false,
+                                }),
+                                obj.index,
+                                obj.componentIndex,
+                                obj.tagType,
+                            )
+                        }
+                        else if (obj.tagType == "ellipse") {
+                            componentArray[0].object[i2] = new ObjectClass(
+                                new fabric.Rect({
+                                    id: obj.id,
+                                    left: obj.x,
+                                    top: obj.y,
+                                    originX: 'left',
+                                    originY: 'top',
+                                    rx: obj.width,
+                                    ry: obj.height,
+                                    angle: 0,
+                                    fill: '#' + obj.color,
+                                    stroke: '#' + obj.stroke,
+                                    strokeWidth: obj.strokeWidth,
+                                    transparentCorners: false,
+                                }),
+                                obj.index,
+                                obj.componentIndex,
+                                obj.tagType,
+                            )
+                        }
+                        else if (obj.tagType == "i-text") {
+                            componentArray[0].object[i2] = new ObjectClass(
+                                new fabric.IText(obj.text, {
+                                    id: obj.id,
+                                    left: obj.x,
+                                    top: obj.y,
+                                    originX: 'left',
+                                    originY: 'top',
+                                    editable: true,
+                                    hasControls: false,
+                                    fontSize: obj.fontSize,
+                                    lineHeight: obj.lineHeight,
+                                    fill: '#' + obj.color,
+                                    fontFamily: 'Nunito',
+                                    fontWeight: 200,
+                                }),
+                                obj.index,
+                                obj.componentIndex,
+                                obj.tagType,
+                            )
+                        }
 
-                    if (obj.when != null) {
-                        componentArray[0].object[i2].Event.when = obj.when;
-                        componentArray[0].object[i2].Event.do = obj.do;
-                        componentArray[0].object[i2].Event.detail = obj.detail;
+                        componentArray[0].canvas.add(componentArray[0].object[i2].object);
+
+                        if (obj.when != null) {
+                            componentArray[0].object[i2].Event.when = obj.when;
+                            componentArray[0].object[i2].Event.do = obj.do;
+                            componentArray[0].object[i2].Event.detail = obj.detail;
+                        }
                     }
-                    
                 });
 
 
@@ -2660,85 +2679,87 @@ console.log(params.id*1+1)
                 addPage('component', i)
                 componentArray[i].path = element.path;
                 componentArray[i].defaultObject.title.text = element.path;
-                componentArray[i].canvas.loadFromJSON(element.canvasData, function() {
-                    componentArray[i].canvas.renderAll();
-                });  
+                //componentArray[i].canvas.loadFromJSON(element.canvasData, function() {
+                //    componentArray[i].canvas.renderAll();
+                //});  
                 componentArray[i].componentProperty.width = element.componentProperty.width;
                 componentArray[i].componentProperty.height = element.componentProperty.height;
                 componentArray[i].componentProperty.imageSrc = element.componentProperty.imageSrc;
 
                 element.object.forEach((obj, i2) => {
-                    if (obj.tagType == "rect") {
-                        componentArray[i].object[i2] = new ObjectClass(
-                            new fabric.Rect({
-                                id: obj.id,
-                                left: obj.x,
-                                top: obj.y,
-                                originX: 'left',
-                                originY: 'top',
-                                width: obj.width,
-                                height: obj.height,
-                                angle: 0,
-                                fill: '#' + obj.color,
-                                stroke: '#' + obj.stroke,
-                                strokeWidth: obj.strokeWidth,
-                                transparentCorners: false,
-                            }),
-                            obj.index,
-                            obj.componentIndex,
-                            obj.tagType,
-                        )
-                    }
-                    else if (obj.tagType == "ellipse") {
-                        componentArray[i].object[i2] = new ObjectClass(
-                            new fabric.Rect({
-                                id: obj.id,
-                                left: obj.x,
-                                top: obj.y,
-                                originX: 'left',
-                                originY: 'top',
-                                rx: obj.width,
-                                ry: obj.height,
-                                angle: 0,
-                                fill: '#' + obj.color,
-                                stroke: '#' + obj.stroke,
-                                strokeWidth: obj.strokeWidth,
-                                transparentCorners: false,
-                            }),
-                            obj.index,
-                            obj.componentIndex,
-                            obj.tagType,
-                        )
-                    }
-                    else if (obj.tagType == "i-text") {
-                        componentArray[i].object[i2] = new ObjectClass(
-                            new fabric.IText(obj.text, {
-                                id: obj.id,
-                                left: obj.x,
-                                top: obj.y,
-                                originX: 'left',
-                                originY: 'top',
-                                editable: true,
-                                hasControls: false,
-                                fontSize: obj.fontSize,
-                                lineHeight: obj.lineHeight,
-                                fill: '#' + obj.color,
-                                fontFamily: 'Nunito',
-                                fontWeight: 200,
-                            }),
-                            obj.index,
-                            obj.componentIndex,
-                            obj.tagType,
-                        )
-                    }
+                    if (obj.id != '//deleted//') {
+                        if (obj.tagType == "rect") {
+                            componentArray[i].object[i2] = new ObjectClass(
+                                new fabric.Rect({
+                                    id: obj.id,
+                                    left: obj.x,
+                                    top: obj.y,
+                                    originX: 'left',
+                                    originY: 'top',
+                                    width: obj.width,
+                                    height: obj.height,
+                                    angle: 0,
+                                    fill: '#' + obj.color,
+                                    stroke: '#' + obj.stroke,
+                                    strokeWidth: obj.strokeWidth,
+                                    transparentCorners: false,
+                                }),
+                                obj.index,
+                                obj.componentIndex,
+                                obj.tagType,
+                            )
+                        }
+                        else if (obj.tagType == "ellipse") {
+                            componentArray[i].object[i2] = new ObjectClass(
+                                new fabric.Rect({
+                                    id: obj.id,
+                                    left: obj.x,
+                                    top: obj.y,
+                                    originX: 'left',
+                                    originY: 'top',
+                                    rx: obj.width,
+                                    ry: obj.height,
+                                    angle: 0,
+                                    fill: '#' + obj.color,
+                                    stroke: '#' + obj.stroke,
+                                    strokeWidth: obj.strokeWidth,
+                                    transparentCorners: false,
+                                }),
+                                obj.index,
+                                obj.componentIndex,
+                                obj.tagType,
+                            )
+                        }
+                        else if (obj.tagType == "i-text") {
+                            componentArray[i].object[i2] = new ObjectClass(
+                                new fabric.IText(obj.text, {
+                                    id: obj.id,
+                                    left: obj.x,
+                                    top: obj.y,
+                                    originX: 'left',
+                                    originY: 'top',
+                                    editable: true,
+                                    hasControls: false,
+                                    fontSize: obj.fontSize,
+                                    lineHeight: obj.lineHeight,
+                                    fill: '#' + obj.color,
+                                    fontFamily: 'Nunito',
+                                    fontWeight: 200,
+                                }),
+                                obj.index,
+                                obj.componentIndex,
+                                obj.tagType,
+                            )
+                        }
 
-                    
-                    if (obj.when != null) {
-                        componentArray[i].object[i2].Event.when = obj.when;
-                        componentArray[i].object[i2].Event.do = obj.do;
-                        componentArray[i].object[i2].Event.detail = obj.detail;
+                        componentArray[i].canvas.add(componentArray[i].object[i2].object);
+
+                        if (obj.when != null) {
+                            componentArray[i].object[i2].Event.when = obj.when;
+                            componentArray[i].object[i2].Event.do = obj.do;
+                            componentArray[i].object[i2].Event.detail = obj.detail;
+                        }
                     }
-                    
                 });
 
 
@@ -2873,7 +2894,8 @@ console.log(params.id*1+1)
 
         CustomSelectComponentChild.refresh(ui.currentSelect);        
         ui.currentPageMode = 'page';
-        ui.objectType = 'page'
+        ui.objectType = 'page';
+        ui.pageIndex = 0;
     }
     
 
@@ -2887,7 +2909,10 @@ console.log(params.id*1+1)
 
 
 
-    
+
+
+
+
     //코드 생성 부분
     var filesIndex = 0;
     var fileNames = [];
@@ -2968,13 +2993,10 @@ console.log(params.id*1+1)
                         fileContents[filesIndex] += '\t}\n';
                     }
                 });
-                //css 완성되면 넣기
-                if(comp.css != null)
-                    fileContents[filesIndex] += comp.css;
+                if(comp.css != null) fileContents[filesIndex] += comp.css;
                 fileContents[filesIndex] += '\n<'+'/style>\n';
                 fileNames[filesIndex] = "component/"+ comp.path + ".svelte";
                 filesIndex+=1;
-
             }
         });
     }
@@ -3078,8 +3100,11 @@ console.log(params.id*1+1)
             formField1.value = projectName;
             form1.appendChild(formField1);
             if(todo == 'showDemoPage'){
-                var newWin = window.open("about:blank", "Hosting");
-                form1.target = "Hosting";
+                var newWin = window.open("about:blank", "DemoPage");
+                form1.target = "DemoPage";
+            } else {
+                var newWin = window.open("about:blank", "Download");
+                form1.target = "Download";
             }
             form1.submit();
         } else {
@@ -3118,12 +3143,21 @@ console.log(params.id*1+1)
             formField5.value = todo;
             form2.appendChild(formField5);
             if(todo == 'showDemoPage'){
-                var newWin = window.open("about:blank", "Hosting");
-                form2.target = "Hosting";
+                var newWin = window.open("about:blank", "DemoPage");
+                form2.target = "DemoPage";
+            } else {
+                var newWin = window.open("about:blank", "Download");
+                form2.target = "Download";
             }
             form2.submit();
         }
     }
+
+
+
+
+
+    
 
 
 
@@ -3146,9 +3180,8 @@ console.log(params.id*1+1)
             ui.mouseType = event.detail.data;
         }}/>
         
-           
-
         <CustomTool2 zoom={ui.currentZoom} currentPageMode={ui.currentPageMode}
+        changeText={ui.changeText}
         on:setZoomDefault={()=>{
             setZoomDefault();
         }}
@@ -3247,6 +3280,7 @@ console.log(params.id*1+1)
                 
             }}
             on:changePageComponent={(event)=>{
+
                 if (event.detail.pageOrComponent == 'page') {
                     
                     ui.pageOrComponent = event.detail.pageOrComponent;
@@ -3260,11 +3294,9 @@ console.log(params.id*1+1)
                         document.getElementById(element.canvasWrapperId).style.display = 'none';
                     });
 
-
                     componentArray.forEach((element, index) => {
                         loadImage(element.defaultObject.box.width, element.defaultObject.box.height, index);
                     });
-                    
                     
                     ui.currentZoom = roundTwo(pageArray[ui.pageIndex].canvas.getZoom());
 
@@ -3274,7 +3306,6 @@ console.log(params.id*1+1)
                     
                     ui.objectType = 'page';
 
-                    
                     ui.currentSelect = null;
                     ui.currentSelect = Array(0); 
 
@@ -3291,16 +3322,20 @@ console.log(params.id*1+1)
                         element.canvas.defaultCursor = `url("../icon/Cursor1.png"), auto`;
                         element.canvas.hoverCursor = `url("../icon/Cursor1.png"), auto`;
                     });
-
                     
                     try {
                         CustomSelectComponentChild.refresh(ui.currentSelect);
                     } catch (error) {
                         
                     }
-                    
 
-
+                    //pageArray[ui.pageIndex].canvas.getObjects().forEach(function(element) {
+//
+                    //    if(element.id === event.detail.objId) {
+//
+                    //    }
+//
+                    //});
 
                     
                 }
@@ -3310,7 +3345,6 @@ console.log(params.id*1+1)
                     ui.componentIndex = event.detail.componentIndex;
                     ui.currentPageMode = 'component';
                     ui.mouseType = event.detail.mouseType;
-                    
                     componentArray.forEach(element => {
                         try {
                             element.canvas.discardActiveObject();
@@ -3319,7 +3353,6 @@ console.log(params.id*1+1)
                             
                         }
                     });
-
                     pageArray.forEach(element => {
                         document.getElementById(element.canvasWrapperId).style.display = 'none';
                     });
@@ -3362,7 +3395,11 @@ console.log(params.id*1+1)
             }}
             on:pageButtonEnter={(event)=>{
                 if (event.detail.pageOrComponent == 'page') {
+                    console.log(event.detail.pageArrayIndex)
+                    console.log(event.detail.componentPagePath)
                     pageArray = event.detail.pageArray;
+                    pageArray[event.detail.pageArrayIndex].defaultObject.title.text = event.detail.componentPagePath;
+                    pageArray[event.detail.pageArrayIndex].canvas.renderAll();
                 }
                 else if (event.detail.pageOrComponent == 'component') {
                     componentArray = event.detail.componentArray;
@@ -3485,9 +3522,16 @@ console.log(params.id*1+1)
                     let activeObject = pageArray[ui.pageIndex].canvas.getActiveObject();
                     if (event.detail.x != undefined && event.detail.y != undefined) {
                         currentObject.x = event.detail.x;
-                        currentObject.x = event.detail.x;
-                        activeObject.set('left', currentObject.x)
-                        activeObject.set('top', currentObject.y)
+                        currentObject.y = event.detail.y;
+                        activeObject.left = currentObject.x;
+                        activeObject.top = currentObject.y;
+                        
+                        pageArray[ui.pageIndex].selectComponent.forEach((element, index) => {
+                            if (element.componentIndex == activeObject.id) {
+                                element.x = currentObject.x;
+                                element.y = currentObject.y;
+                            }
+                        })
                         pageArray[ui.pageIndex].canvas.renderAll()
                     }
                 }}
