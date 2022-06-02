@@ -2949,10 +2949,13 @@
                         }
                         fileContents[filesIndex] += '>';
                         if(obj.tagType == 'i-text') {
-                            obj.object.text = obj.object.text.replace(/,/g, "/ST47B2F5");
+                            obj.object.text = obj.object.text.replace(/,/g, "ST47-B2F5");
                             obj.object.text = obj.object.text.replace(/\n/g, "<br>");
-                            console.log(obj.object.text);
+                            obj.object.text = obj.object.text.replace(/ /g, "&nbsp;");
                             fileContents[filesIndex] += obj.object.text;
+                            obj.object.text = obj.object.text.replace(/ST47-B2F5/g, ",");
+                            obj.object.text = obj.object.text.replace(/<br>/g, "\n");
+                            obj.object.text = obj.object.text.replace(/&nbsp;/g, " ");
                         }
                         fileContents[filesIndex] += '<' + '/div' + '>\n';
                     }
@@ -2996,7 +2999,11 @@
                         fileContents[filesIndex] += '\t}\n';
                     }
                 });
-                if(comp.css != null) fileContents[filesIndex] += comp.css;
+                if(comp.css != null) {
+                    comp.css = comp.css.replace(/,/g, "ST47-B2F5");
+                    fileContents[filesIndex] += comp.css;
+                    comp.css = comp.css.replace(/ST47-B2F5/g, ",");
+                }
                 fileContents[filesIndex] += '\n<'+'/style>\n';
                 fileNames[filesIndex] = "component/"+ comp.path + ".svelte";
                 filesIndex+=1;
@@ -3027,7 +3034,7 @@
                 page.selectComponent.forEach(sel => {
                     if(sel.componentId != '//deleted//'){
                         fileContents[filesIndex] += "\t#" + sel.componentId + " {\n";
-                        fileContents[filesIndex] += '\t\tposition: relative;\n';
+                        fileContents[filesIndex] += '\t\tposition: absolute;\n';
                         fileContents[filesIndex] += '\t\twidth: '+sel.width+'px;\n';
                         fileContents[filesIndex] += '\t\theight: '+sel.height+'px;\n';
                         fileContents[filesIndex] += '\t\ttop: '+sel.y+'px;\n';
@@ -3062,9 +3069,9 @@
         pageArray.forEach(page => {
             if(page.path != "//deleted//") {
                 if(page.path == '/'){
-                    fileContents[filesIndex] += "\t'/': Root/ST47B2F5\n";
+                    fileContents[filesIndex] += "\t'/': RootST47-B2F5\n";
                 } else {
-                    fileContents[filesIndex] += "\t'"+page.path+"': "+page.path.substr(1)+"/ST47B2F5\n";
+                    fileContents[filesIndex] += "\t'"+page.path+"': "+page.path.substr(1)+"ST47-B2F5\n";
                 }
             }
         }); 
