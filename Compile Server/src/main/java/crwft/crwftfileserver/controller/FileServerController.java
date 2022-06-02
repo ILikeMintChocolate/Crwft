@@ -239,7 +239,7 @@ public class FileServerController {
                 if(!f.exists()) f.createNewFile();
                 FileWriter fw = new FileWriter(f);
                 BufferedWriter writer = new BufferedWriter(fw);
-                writer.write(contents[i].replaceAll("/ST47B2F5", ","));
+                writer.write(contents[i].replaceAll("ST47-B2F5", ","));
                 writer.close();
             } catch (Exception e){
                 e.printStackTrace();
@@ -249,15 +249,15 @@ public class FileServerController {
         //컴파일
         try{
             String batch = "#!/bin/bash\ncd "+projectDirPath+"\nnpm i\nnpm i svelte-spa-router\nnpm run build";
-            File f = new File("/root/api/command.sh");
+            File f = new File("/root/api/users/"+userName+"/command.sh");
             //File f = new File("/Users/aneunne7/Desktop/command");
             FileWriter fw = new FileWriter(f);
             BufferedWriter writer = new BufferedWriter(fw);
             writer.write(batch);
             writer.close();
 
-            shellCommand("chmod +x /root/api/command.sh");
-            shellCommand("/root/api/command.sh");
+            shellCommand("chmod +x /root/api/users/"+userName+"/command.sh");
+            shellCommand("/root/api/users/"+userName+"/command.sh");
             //shellCommand("chmod +x /Users/aneunne7/Desktop/command");
             //shellCommand("/Users/aneunne7/Desktop/command");
 
