@@ -48,6 +48,7 @@
     let CustomSelectComponentChild2;
 
 
+    //$userUID = 'Kolhg56pseZMgMPrq1Ou6E6O1HE2';
 
 
 
@@ -3167,11 +3168,6 @@
 
 
 
-    
-
-
-
-
 
     
 
@@ -3218,6 +3214,7 @@
         }}
 
         on:exportFileAsSvelte={()=>{
+            
             createComponentFile();
             createPageFile();
             createRoutesFile();
